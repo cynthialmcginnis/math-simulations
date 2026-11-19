@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network Infection Mission Brief Generator</title>
+<script src="https://unpkg.com/docx@9.7.1/dist/index.iife.js"></script>
+</head>
+<body style="font-family: Arial, Helvetica, sans-serif; max-width: 950px; margin: 0 auto; color: #222222; padding: 10px;">
+
+  <div style="background-color: #1a3c5e; color: #ffffff; padding: 16px 20px; border-radius: 6px 6px 0 0;">
+    <h1 style="margin: 0; font-size: 22px;">Network Infection Mission Brief</h1>
+    <p style="margin: 4px 0 0 0; font-size: 14px; color: #d6e6f2;">Exponential &amp; Logistic Growth Models — College Algebra, Chapter 4</p>
+  </div>
+
+  <div style="border: 1px solid #cccccc; padding: 14px 18px; margin-top: 12px; font-size: 14px;">
+    <p style="margin-top: 0;">Pick a <strong>callsign</strong> for this mission — your first name, a nickname, or a codename you invent. Click <strong>Generate Mission</strong>. Your mission parameters are generated from your callsign, so pick something distinctive (not just "Student"). If you ever need to regenerate (lost your numbers, switched devices), enter the same callsign and you'll get the same mission back — write down your <strong>Mission Code</strong> before you submit your work.</p>
+    <label style="display: block; margin-bottom: 12px;">
+      <strong>Operator Callsign:</strong><br>
+      <input id="studentName" type="text" style="width: 100%; max-width: 300px; padding: 6px; margin-top: 4px;">
+    </label>
+    <button onclick="generate()" style="background-color: #1a6fa3; color: #ffffff; border: none; padding: 10px 18px; font-size: 14px; border-radius: 4px; cursor: pointer;">Generate Mission</button>
+  </div>
+
+  <div id="output" style="display: none; margin-top: 16px;">
+
+    <div style="background-color: #1a3c5e; color: #ffffff; padding: 10px 16px;">
+      <h2 id="missionTitle" style="margin: 0; font-size: 18px;"></h2>
+      <p id="missionMeta" style="margin: 4px 0 0 0; font-size: 13px; color: #d6e6f2;"></p>
+    </div>
+
+    <div style="border: 1px solid #cccccc; padding: 14px 18px; font-size: 14px;">
+      <h3 style="margin-top: 0;">Situation</h3>
+      <p id="situationText"></p>
+
+      <h3>Mission Parameters</h3>
+      <table style="border-collapse: collapse; font-size: 14px;">
+        <tr><td style="padding: 3px 10px 3px 0;"><strong>A₀</strong> (Patient Zero count)</td><td id="pA0" style="padding: 3px 0;"></td></tr>
+        <tr><td style="padding: 3px 10px 3px 0;"><strong>k</strong> (growth rate constant)</td><td id="pK" style="padding: 3px 0;"></td></tr>
+        <tr><td style="padding: 3px 10px 3px 0;"><strong>L</strong> (subnet capacity)</td><td id="pL" style="padding: 3px 0;"></td></tr>
+        <tr><td style="padding: 3px 10px 3px 0;">Early-warning threshold</td><td id="pThresh" style="padding: 3px 0;"></td></tr>
+        <tr><td style="padding: 3px 10px 3px 0;">Projection time, t₁</td><td id="pT1" style="padding: 3px 0;"></td></tr>
+      </table>
+    </div>
+
+    <div id="modelShapes" style="border: 1px solid #cccccc; padding: 14px 18px; font-size: 14px; margin-top: 12px;"></div>
+
+    <div id="tasksContainer"></div>
+
+    <div style="background-color: #ddeeff; border-left: 4px solid #1a6fa3; padding: 10px 18px; margin-top: 14px; font-size: 13px;">
+      <strong>Due:</strong> [Professor Cy — add due date here]. Submit your completed Mission Brief (Tasks 1–8, with work shown, plus your graph) to [assignment name in D2L].
+    </div>
+
+    <div style="background-color: #fdeee0; border-left: 4px solid #e8772e; padding: 10px 18px; margin-top: 10px; font-size: 13px;">
+      This is an individual mission — every analyst's network parameters are different, so showing your work matters more than matching anyone else's numbers. Late work follows the standard course policy.
+    </div>
+
+    <div style="margin-top: 14px; text-align: center;">
+      <button onclick="downloadDocx()" style="background-color: #1a6fa3; color: #ffffff; border: none; padding: 12px 22px; font-size: 15px; border-radius: 4px; cursor: pointer;">Download My Mission Brief (Word)</button>
+    </div>
+
+  </div>
+
+<script>
+function xmur3(str) {
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i++) {
+    h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  return function() {
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    h ^= h >>> 16;
+    return h >>> 0;
+  };
+}
+
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function randInt(rand, min, max) {
+  return min + Math.floor(rand() * (max - min + 1));
+}
+
+let currentMission = null;
+
+function generate() {
+  const callsign = document.getElementById("studentName").value.trim();
+  if (!callsign) {
+    alert("Enter a callsign first.");
+    return;
+  }
+
+  const seedFn = xmur3(callsign.toLowerCase());
+  const seed = seedFn();
+  const rand = mulberry32(seed);
+
+  const missionCode = seed.toString(36).toUpperCase().padStart(8, "0").slice(-4);
+
+  // ----- Generate parameters (order matters for reproducibility) -----
+  const A0 = randInt(rand, 1, 5);
+  const kHundredths = randInt(rand, 10, 90); // 0.10 - 0.90
+  const k = kHundredths / 100;
+  const t1 = randInt(rand, 1, 8);
+  const Ltens = randInt(rand, 5, 50); // 50 - 500, step 10
+  const L = Ltens * 10;
+  const threshold = A0 + randInt(rand, 3, 10);
+
+  const subnetLetters = ["A", "B", "C", "D", "E", "F", "G", "H"];
+  const subnetLetter = subnetLetters[randInt(rand, 0, subnetLetters.length - 1)];
+  const subnetNum = randInt(rand, 1, 9);
+  const subnet = subnetLetter + "-" + subnetNum;
+
+  // ----- Internal-only values, used to scale the graph range -----
+  const c = (L - A0) / A0;
+  const tInf = Math.log(c) / k;
+  let graphRange = Math.ceil((Math.max(t1, tInf) * 1.25) / 5) * 5;
+  if (graphRange < 10) graphRange = 10;
+  if (graphRange > 40) graphRange = 40;
+
+  const kStr = k.toFixed(2);
+
+  const situationText =
+    "You're the on-duty analyst for Subnet " + subnet + " during an active intrusion. " +
+    "At 0000Z, security logs confirm " + A0 + " workstation" + (A0 === 1 ? "" : "s") +
+    " compromised — this is Patient Zero. Threat intel puts the exploit's growth rate at k = " + kStr +
+    " per hour. Subnet " + subnet + " has " + L + " total hosts that could fall if this isn't contained.";
+
+  const tasks = [
+    {
+      title: "Model the Breach",
+      body: "Using the exponential growth model A(t) = A0 \u00B7 e^(kt), write the specific equation for this mission. Substitute A0 = " + A0 + " and k = " + kStr + "."
+    },
+    {
+      title: "Project the Damage",
+      body: "Calculate A(" + t1 + ") \u2014 the number of compromised nodes after " + t1 + " hour" + (t1 === 1 ? "" : "s") + " if nothing is done. Show the exact value (in terms of e) and a decimal approximation, then apply tactical rounding (round UP to the nearest whole node)."
+    },
+    {
+      title: "Find the Warning Time",
+      body: "Command's early-warning threshold for Subnet " + subnet + " is " + threshold + " compromised nodes. Starting from your equation in Task 1, solve algebraically for t \u2014 at what time t does the network reach " + threshold + " compromised nodes? You'll need logarithms. Round your answer to two decimal places."
+    },
+    {
+      title: "Add the Capacity Constraint",
+      body: "Subnet " + subnet + " only has " + L + " hosts total \u2014 that's your carrying capacity, L. The logistic growth model is P(t) = L / (1 + c \u00B7 e^(-kt)). Using P0 = A0 = " + A0 + " as your starting condition, solve for c. Show your work."
+    },
+    {
+      title: "Compare the Models",
+      body: "Using your logistic model from Task 4, calculate P(" + t1 + "). Compare it to your answer for A(" + t1 + ") in Task 2 \u2014 which is larger, and explain in a sentence or two why that makes sense given what each model assumes about the network."
+    },
+    {
+      title: "Find the Tipping Point",
+      body: "The inflection point of a logistic model \u2014 the moment infection spreads fastest \u2014 happens when P(t) = L/2. Using your value of c from Task 4, solve for t algebraically (you'll need logarithms again). At what time does Subnet " + subnet + " hit its tipping point?"
+    },
+    {
+      title: "Graph Both Models",
+      body: "On one set of axes, graph A(t) from Task 1 and P(t) from Task 4 for t = 0 to " + graphRange + " hours. Label the horizontal asymptote of P(t). If the tipping point you found in Task 6 falls within this window, mark it on your graph; if it falls outside this window, say so in Task 8 and explain what that tells you about how close \u2014 or how far \u2014 Subnet " + subnet + " is from its fastest-spread moment. A blank coordinate grid is included below \u2014 choose and label your own scale on both axes."
+    },
+    {
+      title: "Brief the Commander",
+      body: "In 3\u20135 sentences, recommend to your Commander when Subnet " + subnet + " should be isolated from the rest of the network. Back up your recommendation using your results from Tasks 2, 5, and 6."
+    }
+  ];
+
+  // ----- Render to page -----
+  document.getElementById("output").style.display = "block";
+  document.getElementById("missionTitle").textContent = "Mission Brief \u2014 Subnet " + subnet;
+  document.getElementById("missionMeta").textContent = "Callsign: " + callsign + "   |   Mission Code: " + missionCode;
+  document.getElementById("situationText").textContent = situationText;
+  document.getElementById("pA0").textContent = A0;
+  document.getElementById("pK").textContent = kStr;
+  document.getElementById("pL").textContent = L;
+  document.getElementById("pThresh").textContent = threshold;
+  document.getElementById("pT1").textContent = t1 + " hour" + (t1 === 1 ? "" : "s");
+
+  document.getElementById("modelShapes").innerHTML =
+    '<h3 style="margin-top: 0;">What These Models Look Like</h3>' +
+    '<p>Before you start, here\u2019s the general shape of each model. Exponential growth keeps climbing with no limit. Logistic growth follows the same curve at first, then levels off as it approaches the network\u2019s capacity, L.</p>' +
+    '<img src="' + generateModelShapesDataURL() + '" style="max-width: 100%; border: 1px solid #cccccc;">' +
+    '<p style="margin-bottom: 0;">Every task below includes a blank coordinate grid. Use it to plot points, sketch a curve, or visualize your work \u2014 choose and label your own scale each time.</p>';
+
+  const gridDataURL = generateGridDataURL();
+
+  const tasksContainer = document.getElementById("tasksContainer");
+  tasksContainer.innerHTML = tasks.map(function(task, i) {
+    return '<div style="background-color: #1a6fa3; color: #ffffff; padding: 8px 14px; font-weight: bold; font-size: 16px; margin-top: 16px;">' +
+      "Task " + (i + 1) + " \u2014 " + task.title +
+      '</div><div style="border: 1px solid #cccccc; padding: 14px 18px; font-size: 14px;"><p style="margin: 0 0 10px 0;">' +
+      task.body + '</p><img src="' + gridDataURL + '" style="display: block; width: 480px; max-width: 100%; border: 1px solid #cccccc; margin-top: 8px;"></div>';
+  }).join("");
+
+  currentMission = {
+    callsign: callsign,
+    missionCode: missionCode,
+    subnet: subnet,
+    situationText: situationText,
+    params: { A0: A0, k: kStr, L: L, threshold: threshold, t1: t1 },
+    tasks: tasks
+  };
+}
+
+// ---------- Cartesian grid image (for Task 7) ----------
+function drawArrow(ctx, x, y, dir, scale) {
+  const size = 9 * scale;
+  ctx.fillStyle = "#222222";
+  ctx.beginPath();
+  if (dir === "up") {
+    ctx.moveTo(x, y - size);
+    ctx.lineTo(x - size / 2, y + size / 2);
+    ctx.lineTo(x + size / 2, y + size / 2);
+  } else {
+    ctx.moveTo(x + size, y);
+    ctx.lineTo(x - size / 2, y - size / 2);
+    ctx.lineTo(x - size / 2, y + size / 2);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+// ---------- Reference diagram: exponential vs logistic shapes ----------
+function drawModelPanel(ctx, x0, y0, w, h, scale, type) {
+  const marginLeft = 40 * scale, marginRight = 15 * scale, marginTop = 60 * scale, marginBottom = 55 * scale;
+  const left = x0 + marginLeft, right = x0 + w - marginRight;
+  const top = y0 + marginTop, bottom = y0 + h - marginBottom;
+
+  ctx.strokeStyle = "#222222";
+  ctx.lineWidth = 2 * scale;
+  ctx.beginPath(); ctx.moveTo(left, bottom); ctx.lineTo(left, top - 10 * scale); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(left, bottom); ctx.lineTo(right + 10 * scale, bottom); ctx.stroke();
+  drawArrow(ctx, left, top - 10 * scale, "up", scale);
+  drawArrow(ctx, right + 10 * scale, bottom, "right", scale);
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#1a3c5e";
+  ctx.font = "bold " + (15 * scale) + "px Arial";
+  ctx.fillText(type === "exponential" ? "Exponential Growth" : "Logistic Growth", x0 + w / 2, y0 + 20 * scale);
+  ctx.font = (13 * scale) + "px Arial";
+  ctx.fillText(type === "exponential" ? "A(t) = A\u2080 \u00B7 e^(kt)" : "P(t) = L / (1 + c\u00B7e^(-kt))", x0 + w / 2, y0 + 40 * scale);
+
+  const asymFrac = 0.92;
+  ctx.strokeStyle = "#1a6fa3";
+  ctx.lineWidth = 2.5 * scale;
+  ctx.beginPath();
+  const N = 60;
+  for (let i = 0; i <= N; i++) {
+    const xFrac = i / N;
+    const xVal = xFrac * 4;
+    let yFrac;
+    if (type === "exponential") {
+      yFrac = (Math.exp(xVal) - 1) / (Math.exp(4) - 1);
+    } else {
+      const s = 1 / (1 + Math.exp(-2 * (xVal - 2)));
+      yFrac = s * asymFrac;
+    }
+    const px = left + xFrac * (right - left);
+    const py = bottom - yFrac * (bottom - top);
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  if (type === "logistic") {
+    const asymY = bottom - asymFrac * (bottom - top);
+    ctx.strokeStyle = "#e8772e";
+    ctx.lineWidth = 1.5 * scale;
+    ctx.setLineDash([6 * scale, 5 * scale]);
+    ctx.beginPath(); ctx.moveTo(left, asymY); ctx.lineTo(right + 10 * scale, asymY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#e8772e";
+    ctx.font = (13 * scale) + "px Arial";
+    ctx.textAlign = "left";
+    ctx.fillText("L (capacity)", left + 6 * scale, asymY - 8 * scale);
+  }
+
+  ctx.fillStyle = "#222222";
+  ctx.font = (13 * scale) + "px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("t", right + 10 * scale, bottom + 22 * scale);
+  ctx.save();
+  ctx.translate(left - 22 * scale, (top + bottom) / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText(type === "exponential" ? "A(t)" : "P(t)", 0, 0);
+  ctx.restore();
+
+  ctx.fillStyle = "#555555";
+  ctx.font = "italic " + (12 * scale) + "px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText(type === "exponential" ? "Keeps climbing \u2014 no ceiling" : "Levels off near capacity", x0 + w / 2, y0 + h - 8 * scale);
+}
+
+function generateModelShapesDataURL() {
+  const scale = 2;
+  const W = 900 * scale, H = 380 * scale;
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, W, H);
+
+  const gap = 30 * scale;
+  const panelW = (W - 3 * gap) / 2;
+  const panelH = H - 2 * gap;
+
+  drawModelPanel(ctx, gap, gap, panelW, panelH, scale, "exponential");
+  drawModelPanel(ctx, gap * 2 + panelW, gap, panelW, panelH, scale, "logistic");
+
+  return canvas.toDataURL("image/png");
+}
+
+function generateGridDataURL() {
+  const scale = 2;
+  const W = 600 * scale, H = 450 * scale;
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, W, H);
+
+  const marginLeft = 55 * scale, marginRight = 25 * scale, marginTop = 25 * scale, marginBottom = 55 * scale;
+  const gridLeft = marginLeft, gridRight = W - marginRight;
+  const gridTop = marginTop, gridBottom = H - marginBottom;
+  const cols = 12, rows = 10;
+  const colW = (gridRight - gridLeft) / cols;
+  const rowH = (gridBottom - gridTop) / rows;
+
+  // light gridlines
+  ctx.strokeStyle = "#dddddd";
+  ctx.lineWidth = 1 * scale;
+  for (let i = 0; i <= cols; i++) {
+    const x = gridLeft + i * colW;
+    ctx.beginPath(); ctx.moveTo(x, gridTop); ctx.lineTo(x, gridBottom); ctx.stroke();
+  }
+  for (let j = 0; j <= rows; j++) {
+    const y = gridTop + j * rowH;
+    ctx.beginPath(); ctx.moveTo(gridLeft, y); ctx.lineTo(gridRight, y); ctx.stroke();
+  }
+
+  // tick marks
+  ctx.strokeStyle = "#222222";
+  ctx.lineWidth = 1.5 * scale;
+  for (let i = 1; i <= cols; i++) {
+    const x = gridLeft + i * colW;
+    ctx.beginPath(); ctx.moveTo(x, gridBottom - 4 * scale); ctx.lineTo(x, gridBottom + 4 * scale); ctx.stroke();
+  }
+  for (let j = 1; j <= rows; j++) {
+    const y = gridBottom - j * rowH;
+    ctx.beginPath(); ctx.moveTo(gridLeft - 4 * scale, y); ctx.lineTo(gridLeft + 4 * scale, y); ctx.stroke();
+  }
+
+  // bold axes with arrowheads
+  ctx.strokeStyle = "#222222";
+  ctx.lineWidth = 2.5 * scale;
+  ctx.beginPath(); ctx.moveTo(gridLeft, gridBottom); ctx.lineTo(gridLeft, gridTop - 12 * scale); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(gridLeft, gridBottom); ctx.lineTo(gridRight + 12 * scale, gridBottom); ctx.stroke();
+  drawArrow(ctx, gridLeft, gridTop - 12 * scale, "up", scale);
+  drawArrow(ctx, gridRight + 12 * scale, gridBottom, "right", scale);
+
+  // labels
+  ctx.fillStyle = "#222222";
+  ctx.font = (15 * scale) + "px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("t (hours)", (gridLeft + gridRight) / 2, H - 12 * scale);
+
+  ctx.save();
+  ctx.translate(16 * scale, (gridTop + gridBottom) / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText("Compromised Nodes", 0, 0);
+  ctx.restore();
+
+  ctx.textAlign = "right";
+  ctx.font = (13 * scale) + "px Arial";
+  ctx.fillText("0", gridLeft - 8 * scale, gridBottom + 18 * scale);
+
+  return canvas.toDataURL("image/png");
+}
+
+function dataURLToUint8Array(dataURL) {
+  const base64 = dataURL.split(",")[1];
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+// ---------- Word document export ----------
+async function downloadDocx() {
+  if (!currentMission) return;
+  const m = currentMission;
+  const {
+    Document, Packer, Paragraph, TextRun, ImageRun, Table, TableRow, TableCell,
+    WidthType, BorderStyle, ShadingType, AlignmentType
+  } = docx;
+
+  const NAVY = "1A3C5E", TEAL = "1A6FA3", LIGHTBLUE = "DDEEFF", ORANGE = "FDEEE0";
+
+  const children = [];
+
+  // Title block
+  children.push(new Paragraph({
+    shading: { fill: NAVY, type: ShadingType.CLEAR, color: "auto" },
+    spacing: { after: 0 },
+    children: [new TextRun({ text: "Mission Brief \u2014 Subnet " + m.subnet, bold: true, color: "FFFFFF", size: 32 })]
+  }));
+  children.push(new Paragraph({
+    shading: { fill: NAVY, type: ShadingType.CLEAR, color: "auto" },
+    spacing: { after: 240 },
+    children: [new TextRun({ text: "Exponential & Logistic Growth Models \u2014 College Algebra, Chapter 4", color: "D6E6F2", size: 20 })]
+  }));
+
+  // Operator / mission code
+  children.push(new Paragraph({ children: [new TextRun({ text: "Callsign: " + m.callsign, bold: true })] }));
+  children.push(new Paragraph({ children: [new TextRun({ text: "Mission Code: " + m.missionCode })], spacing: { after: 200 } }));
+
+  // Situation
+  children.push(new Paragraph({ children: [new TextRun({ text: "Situation", bold: true, size: 26 })], spacing: { after: 80 } }));
+  children.push(new Paragraph({ children: [new TextRun({ text: m.situationText })], spacing: { after: 200 } }));
+
+  // Mission parameters table
+  children.push(new Paragraph({ children: [new TextRun({ text: "Mission Parameters", bold: true, size: 26 })], spacing: { after: 80 } }));
+  const paramRows = [
+    ["A0 (Patient Zero count)", String(m.params.A0)],
+    ["k (growth rate constant)", String(m.params.k)],
+    ["L (subnet capacity)", String(m.params.L)],
+    ["Early-warning threshold", String(m.params.threshold)],
+    ["Projection time, t1", m.params.t1 + " hour(s)"]
+  ];
+  children.push(new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: paramRows.map(function(row) {
+      return new TableRow({
+        children: [
+          new TableCell({ width: { size: 50, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: row[0], bold: true })] })] }),
+          new TableCell({ width: { size: 50, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: row[1] })] })] })
+        ]
+      });
+    })
+  }));
+  children.push(new Paragraph({ text: "", spacing: { after: 100 } }));
+
+  // Reference diagram: exponential vs logistic shapes
+  children.push(new Paragraph({ children: [new TextRun({ text: "What These Models Look Like", bold: true, size: 26 })], spacing: { after: 80 } }));
+  children.push(new Paragraph({
+    children: [new TextRun({ text: "Before you start, here\u2019s the general shape of each model. Exponential growth keeps climbing with no limit. Logistic growth follows the same curve at first, then levels off as it approaches the network's capacity, L." })],
+    spacing: { after: 120 }
+  }));
+  children.push(new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { after: 120 },
+    children: [new ImageRun({ type: "png", data: dataURLToUint8Array(generateModelShapesDataURL()), transformation: { width: 600, height: 253 } })]
+  }));
+  children.push(new Paragraph({
+    children: [new TextRun({ text: "Every task below includes a blank coordinate grid. Use it to plot points, sketch a curve, or visualize your work \u2014 choose and label your own scale each time." })],
+    spacing: { after: 200 }
+  }));
+
+  // Tasks
+  const gridImageBytes = dataURLToUint8Array(generateGridDataURL());
+
+  m.tasks.forEach(function(task, i) {
+    children.push(new Paragraph({
+      shading: { fill: TEAL, type: ShadingType.CLEAR, color: "auto" },
+      spacing: { before: 200, after: 80 },
+      children: [new TextRun({ text: "Task " + (i + 1) + " \u2014 " + task.title, bold: true, color: "FFFFFF", size: 24 })]
+    }));
+    children.push(new Paragraph({ children: [new TextRun({ text: task.body })], spacing: { after: 120 } }));
+
+    // Blank coordinate grid for this task
+    children.push(new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 120 },
+      children: [new ImageRun({ type: "png", data: gridImageBytes, transformation: { width: 480, height: 360 } })]
+    }));
+
+    // Writing lines
+    for (let lineNum = 0; lineNum < 2; lineNum++) {
+      children.push(new Paragraph({
+        border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: "AAAAAA" } },
+        spacing: { after: 220 },
+        children: [new TextRun({ text: " " })]
+      }));
+    }
+  });
+
+  // Due date callout
+  children.push(new Paragraph({
+    border: { left: { style: BorderStyle.SINGLE, size: 24, color: TEAL } },
+    shading: { fill: LIGHTBLUE, type: ShadingType.CLEAR, color: "auto" },
+    spacing: { before: 200, after: 80 },
+    children: [
+      new TextRun({ text: "Due: ", bold: true }),
+      new TextRun({ text: "[Professor Cy \u2014 add due date here]. Submit your completed Mission Brief (Tasks 1\u20138, with work shown and your graph) to [assignment name in D2L]." })
+    ]
+  }));
+
+  // Academic integrity callout
+  children.push(new Paragraph({
+    border: { left: { style: BorderStyle.SINGLE, size: 24, color: "E8772E" } },
+    shading: { fill: ORANGE, type: ShadingType.CLEAR, color: "auto" },
+    spacing: { before: 80 },
+    children: [new TextRun({ text: "This is an individual mission \u2014 every analyst's network parameters are different, so showing your work matters more than matching anyone else's numbers. Late work follows the standard course policy." })]
+  }));
+
+  const doc = new Document({ sections: [{ properties: {}, children: children }] });
+  const blob = await Packer.toBlob(doc);
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "Mission_Brief_" + m.missionCode + ".docx";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Story Problem Generator — College Algebra Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1b2a4a;
+    --grid:#c9ddf2;
+    --pencil:#c8401f;
+    --paper:#ffffff;
+    --soft:#f2f7fc;
+    --line:#9db8d6;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:'Atkinson Hyperlegible',system-ui,sans-serif;
+    color:var(--ink);
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:24px 24px;
+    line-height:1.55;
+  }
+  .wrap{max-width:820px;margin:0 auto;padding:32px 20px 80px}
+  header h1{
+    font-family:'Bricolage Grotesque',sans-serif;
+    font-weight:800;
+    font-size:clamp(1.8rem,4vw,2.6rem);
+    margin:0 0 4px;
+    letter-spacing:-0.5px;
+  }
+  header p.sub{margin:0 0 24px;font-size:1.05rem}
+  .panel{
+    background:var(--paper);
+    border:2px solid var(--ink);
+    border-radius:10px;
+    padding:20px 22px;
+    margin-bottom:28px;
+    box-shadow:6px 6px 0 var(--grid);
+  }
+  label{font-weight:700;display:block;margin-bottom:6px}
+  input[type=text]{
+    font:inherit;font-size:1.05rem;
+    padding:10px 12px;border:2px solid var(--ink);border-radius:8px;
+    width:100%;max-width:380px;background:#fff;color:var(--ink);
+  }
+  input[type=text]:focus{outline:3px solid var(--pencil);outline-offset:2px}
+  button{
+    font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1rem;
+    padding:11px 22px;border:2px solid var(--ink);border-radius:8px;
+    background:var(--ink);color:#fff;cursor:pointer;margin-top:12px;margin-right:10px;
+  }
+  button.secondary{background:#fff;color:var(--ink)}
+  button:focus-visible{outline:3px solid var(--pencil);outline-offset:2px}
+  .vcode{
+    display:inline-block;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;
+    background:var(--ink);color:#fff;border-radius:6px;padding:2px 10px;letter-spacing:1px;
+  }
+  h2.story-title{
+    font-family:'Bricolage Grotesque',sans-serif;font-weight:800;
+    font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 8px;letter-spacing:-0.4px;
+  }
+  .intro{font-size:1.05rem;margin-bottom:6px}
+  .part{
+    background:var(--paper);
+    border:2px solid var(--ink);
+    border-radius:10px;
+    padding:22px;
+    margin:26px 0;
+    box-shadow:6px 6px 0 var(--grid);
+    page-break-inside:avoid;
+  }
+  .part-tag{
+    display:inline-block;
+    font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:.85rem;
+    text-transform:uppercase;letter-spacing:1.5px;
+    color:#fff;background:var(--pencil);
+    padding:3px 12px;border-radius:999px;margin-bottom:10px;
+  }
+  .eq{
+    font-family:Georgia,'Times New Roman',serif;font-style:italic;
+    font-size:1.3rem;text-align:center;
+    background:var(--soft);border:1.5px dashed var(--line);border-radius:8px;
+    padding:12px;margin:14px 0;
+  }
+  table.vals{border-collapse:collapse;margin:12px 0;width:100%;max-width:480px}
+  table.vals th,table.vals td{
+    border:1.5px solid var(--ink);padding:8px 14px;text-align:center;font-size:1rem;min-width:54px;
+  }
+  table.vals th{background:var(--soft);font-family:'Bricolage Grotesque',sans-serif}
+  ol.qs{padding-left:22px;margin:14px 0 6px}
+  ol.qs li{margin-bottom:14px}
+  input.cell{
+    font:inherit;width:100%;min-width:48px;border:none;border-bottom:2px solid var(--line);
+    text-align:center;background:transparent;color:var(--pencil);font-weight:700;padding:2px 0;
+  }
+  input.cell:focus{outline:2px solid var(--pencil);outline-offset:1px}
+  textarea.ans{
+    font:inherit;font-size:.98rem;width:100%;min-height:64px;margin-top:6px;
+    border:2px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff;color:var(--ink);resize:vertical;
+  }
+  textarea.ans:focus{outline:2px solid var(--pencil);outline-offset:1px}
+  svg.coord{cursor:crosshair}
+  .gridhint{font-weight:400 !important;font-size:.9rem;opacity:.8}
+  .gridbox{margin-top:14px}
+  .gridbox p{font-weight:700;margin:0 0 6px}
+  svg.coord{background:#fff;border:1.5px solid var(--ink);border-radius:6px}
+  .hidden{display:none}
+  svg.coord{max-width:100%;height:auto}
+  table.vals{display:block;overflow-x:auto}
+  @media (max-width:600px){ .wrap{padding:18px 10px 60px} .part,.panel{padding:16px} }
+  footer.note{font-size:.9rem;margin-top:30px;opacity:.85}
+  @media print{
+    body{background:none}
+    .no-print{display:none !important}
+    .part{box-shadow:none;break-inside:avoid}
+    .wrap{padding:0}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Review Chapter: Your Story Problem</h1>
+    <p class="sub">One story, three equations — linear, quadratic, exponential. Every version is different.</p>
+  </header>
+
+  <div class="panel no-print">
+    <p style="margin-top:0"><strong>First time here?</strong> Make up a character name (not your real name) and generate your story. Type your answers right on this page, click the grids to plot your points, then save it as a PDF and attach the PDF to your discussion post along with your version code.</p>
+    <label for="charInput">Your character's name (made up — optional):</label>
+    <input type="text" id="charInput" placeholder="e.g., Maxine Delgado, DJ Parabola, Sir Graphsalot" autocomplete="off" maxlength="40">
+    <div>
+      <button id="genBtn">Generate my story</button>
+      <button id="printBtn" class="secondary">Save as PDF (to upload)</button>
+    </div>
+    <hr style="border:none;border-top:1.5px dashed var(--line);margin:18px 0">
+    <label for="codeInput">Coming back to your story? Enter your code:</label>
+    <input type="text" id="codeInput" placeholder="e.g., K7Q2" autocomplete="off" maxlength="6" style="max-width:160px;text-transform:uppercase">
+    <div>
+      <button id="loadBtn" class="secondary">Load this version</button>
+    </div>
+  </div>
+
+  <div id="output"></div>
+
+  <footer class="note no-print" id="footNote"></footer>
+</div>
+
+<script>
+const COURSE_LABEL = "College Algebra — Review Chapter";
+
+/* ---------- seeded randomness: same code = same problem ---------- */
+const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no O/0, I/1/L
+function seedToCode(seed){
+  let s = "";
+  let n = seed;
+  for(let i=0;i<4;i++){ s = CODE_ALPHABET[n % 31] + s; n = Math.floor(n/31); }
+  return s;
+}
+function codeToSeed(code){
+  const c = code.toUpperCase().replace(/[^A-Z2-9]/g,"");
+  if(c.length !== 4) return null;
+  let n = 0;
+  for(let i=0;i<4;i++){
+    const idx = CODE_ALPHABET.indexOf(c[i]);
+    if(idx < 0) return null;
+    n = n*31 + idx;
+  }
+  return n;
+}
+function randomSeed(){ return Math.floor(Math.random() * Math.pow(31,4)); }
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const pick = (rng, arr) => arr[Math.floor(rng()*arr.length)];
+
+/* ---------- SVG blank coordinate grid for hand-graphing ---------- */
+function gridSVG(cfg, idx){
+  const W=340,H=280,padL=46,padB=36,padT=14,padR=14;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const nx=Math.round(cfg.xmax/cfg.xstep), ny=Math.round(cfg.ymax/cfg.ystep);
+  let s=`<svg class="coord" data-grid="${idx}" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Coordinate grid, x axis ${cfg.xlabel} to ${cfg.xmax}, y axis ${cfg.ylabel} to ${cfg.ymax}. Click intersections to plot points.">`;
+  for(let i=0;i<=nx;i++){
+    const x=padL+plotW*i/nx;
+    s+=`<line x1="${x}" y1="${padT}" x2="${x}" y2="${padT+plotH}" stroke="#c9ddf2" stroke-width="1"/>`;
+    s+=`<text x="${x}" y="${padT+plotH+16}" font-size="10" text-anchor="middle" fill="#1b2a4a">${i*cfg.xstep}</text>`;
+  }
+  for(let j=0;j<=ny;j++){
+    const y=padT+plotH-plotH*j/ny;
+    s+=`<line x1="${padL}" y1="${y}" x2="${padL+plotW}" y2="${y}" stroke="#c9ddf2" stroke-width="1"/>`;
+    s+=`<text x="${padL-6}" y="${y+3}" font-size="10" text-anchor="end" fill="#1b2a4a">${j*cfg.ystep}</text>`;
+  }
+  s+=`<line x1="${padL}" y1="${padT+plotH}" x2="${padL+plotW}" y2="${padT+plotH}" stroke="#1b2a4a" stroke-width="2"/>`;
+  s+=`<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+plotH}" stroke="#1b2a4a" stroke-width="2"/>`;
+  s+=`<text x="${padL+plotW/2}" y="${H-4}" font-size="11" text-anchor="middle" font-weight="bold" fill="#1b2a4a">${cfg.xlabel}</text>`;
+  s+=`<text x="12" y="${padT+plotH/2}" font-size="11" text-anchor="middle" font-weight="bold" fill="#1b2a4a" transform="rotate(-90 12 ${padT+plotH/2})">${cfg.ylabel}</text>`;
+  s+="</svg>";
+  return s;
+}
+
+const money = n => "$" + (Number.isInteger(n)? n : n.toFixed(2));
+const niceCeil = (v, step) => Math.ceil(v/step)*step;
+
+/* ============================================================
+   PART BUILDERS — each returns {tag, story, eq, varX, tableX,
+   tableY, questions[{q,a}], grid}
+   ============================================================ */
+
+function linearCost(rng, t){
+  const fn = t.fname || "C";
+  const m = pick(rng,[2,3,4,5]);
+  const b = pick(rng,[40,50,60,80]);
+  const x0 = pick(rng,[15,25,35]);
+  const k  = pick(rng,[30,40,50]);
+  const budget = m*k + b;
+  const tableX=[0,10,20,30,40];
+  return {
+    tag:"Part A · Linear",
+    meta:{kind:"linear", inc:true, fname:fn},
+    story:`${t.linStory(m,b)}`,
+    eq:`${fn}(x) = ${m}x + ${b}`,
+    tableX, varX:"x",
+    tableY:tableX.map(x=>m*x+b),
+    questions:[
+      {q:`Find ${fn}(${x0}) and explain what it means in the story.`,
+       a:`${fn}(${x0}) = ${m}(${x0}) + ${b} = ${money(m*x0+b)} — the total for ${t.unit(x0)}.`},
+      {q:`What do the numbers ${m} and ${b} each represent here?`,
+       a:`${m} is the slope: each additional ${t.unitSing} adds ${money(m)}. ${b} is the y-intercept: the ${money(b)} you start with even at x = 0.`},
+      {q:`The total is ${money(budget)}. Use the equation to find how many ${t.unitPl} that represents.`,
+       a:`${budget} = ${m}x + ${b} → ${m}x = ${budget-b} → x = ${k}.`}
+    ],
+    grid:{xmax:40,xstep:10,ymax:niceCeil(m*40+b,50),ystep:50,xlabel:t.unitPl,ylabel:t.yLabel || "cost ($)"}
+  };
+}
+
+function linearDecline(rng, t){
+  const m = pick(rng,[4,5,10]);
+  const start = 100;
+  const x0 = pick(rng,[3,4,6]);
+  const zero = start/m;
+  const step = zero/5;
+  const tableX = [0, step, 2*step, 3*step, 4*step, zero];
+  return {
+    tag:"Part A · Linear",
+    meta:{kind:"linear", inc:false, fname:"B", zeroX:zero},
+    story:`${t.linStory(m,start)}`,
+    eq:`B(t) = ${start} − ${m}t`,
+    tableX, varX:"t",
+    tableY:tableX.map(x=>start-m*x),
+    questions:[
+      {q:`Find B(${x0}) and explain what it means in the story.`,
+       a:`B(${x0}) = ${start} − ${m}(${x0}) = ${start-m*x0}${t.linUnitY} after ${x0} ${t.linUnitX}.`},
+      {q:`What does the slope of −${m} tell you?`,
+       a:`It drops ${m}${t.linUnitY} for every 1 ${t.linUnitX} that passes.`},
+      {q:`Use the equation to find when B(t) = 0. What happens at that moment in the story?`,
+       a:`0 = ${start} − ${m}t → t = ${zero} ${t.linUnitX}. ${t.linZeroMeaning}`}
+    ],
+    grid:{xmax:niceCeil(zero, zero<=10?2:5),xstep:zero<=10?2:5,ymax:100,ystep:20,xlabel:t.linUnitX,ylabel:t.linUnitY.trim()}
+  };
+}
+
+function quadProjectile(rng, t){
+  const v = pick(rng,[32,64,96]);
+  const s = pick(rng,[6,8,20]);
+  const tv = v/32;                 // vertex time
+  const hmax = s + v*v/64;
+  const tBack = v/16;              // back to launch height
+  const tableX = [0, tv/2, tv, 3*tv/2, 2*tv];
+  return {
+    tag:"Part B · Quadratic",
+    meta:{kind:"quad", fname:"h"},
+    story:`${t.quadStory(v,s)}`,
+    eq:`h(t) = −16t² + ${v}t + ${s}`,
+    tableX, varX:"t",
+    tableY:tableX.map(x=>-16*x*x+v*x+s),
+    questions:[
+      {q:`Find the vertex. What is the maximum height, and when does it happen?`,
+       a:`Vertex at t = ${v}/(2·16) = ${tv} s; h(${tv}) = ${hmax} ft. Maximum height ${hmax} ft at ${tv} second${tv===1?"":"s"}.`},
+      {q:`Find h(${tv/2}) and h(${3*tv/2}). Why do they match?`,
+       a:`Both equal ${-16*(tv/2)**2+v*(tv/2)+s} ft — the parabola is symmetric around t = ${tv}.`},
+      {q:`Use the equation to find when the object is back at its starting height of ${s} ft.`,
+       a:`−16t² + ${v}t = 0 → t(−16t + ${v}) = 0 → t = ${tBack} s (t = 0 is the launch).`}
+    ],
+    grid:{xmax:2*tv,xstep:tv/2,ymax:niceCeil(hmax,20),ystep:20,xlabel:"time (s)",ylabel:"height (ft)"}
+  };
+}
+
+function quadProfit(rng, t){
+  const a = pick(rng,[1,2]);
+  const h = pick(rng,[5,6,7,8]);
+  const root = pick(rng,[3,4,5]);
+  const k = a*root*root;
+  const lo=h-root, hi=h+root;
+  const tableX=[h-root,h-Math.ceil(root/2),h,h+Math.ceil(root/2),h+root];
+  return {
+    tag:"Part B · Quadratic",
+    meta:{kind:"quad", fname:"P"},
+    story:`${t.quadStory(a,h,k)}`,
+    eq:`P(p) = −${a===1?"":a}(p − ${h})² + ${k}`,
+    tableX, varX:"p",
+    tableY:tableX.map(x=>-a*(x-h)**2+k),
+    questions:[
+      {q:`What price gives the maximum profit, and what is that profit?`,
+       a:`The vertex is (${h}, ${k}): price ${money(h)}, profit ${money(k)}.`},
+      {q:`Find P(${h+1}). What does it tell you about pricing ${money(1)} above the best price?`,
+       a:`P(${h+1}) = −${a}(1)² + ${k} = ${money(k-a)} — profit drops by ${money(a)}.`},
+      {q:`Use the equation to find the two prices where profit is exactly $0.`,
+       a:`−${a}(p−${h})² + ${k} = 0 → (p−${h})² = ${k/a} → p = ${h} ± ${root}, so ${money(lo)} and ${money(hi)}.`}
+    ],
+    grid:{xmax:h+root,xstep:1,ymax:niceCeil(k,10),ystep:10,xlabel:"price ($)",ylabel:"profit ($)"}
+  };
+}
+
+function expGrowth(rng, t){
+  const A = pick(rng,[5,10,20]);
+  const b = pick(rng,[2,3]);
+  const t0 = b===2 ? 4 : 3;
+  const target = A*Math.pow(b, b===2?5:4);
+  const tableX = b===2 ? [0,1,2,3,4,5] : [0,1,2,3,4];
+  return {
+    tag:"Part C · Exponential",
+    meta:{kind:"exp", growth:true, base:b, fname:"F"},
+    story:`${t.expStory(A,b)}`,
+    eq:`F(t) = ${A} · ${b}<sup>t</sup>`,
+    tableX, varX:"t",
+    tableY:tableX.map(x=>A*Math.pow(b,x)),
+    questions:[
+      {q:`Find F(${t0}) and explain what it means in the story.`,
+       a:`F(${t0}) = ${A}·${b}<sup>${t0}</sup> = ${A*Math.pow(b,t0)} ${t.expUnit} after ${t0} ${t.expTime}.`},
+      {q:`What does the base ${b} tell you about how this grows?`,
+       a:`It ${b===2?"doubles":"triples"} every ${t.expTimeSing} — multiplied by ${b}, not added.`},
+      {q:`Use your table or graph: when does it reach ${target} ${t.expUnit}?`,
+       a:`At t = ${b===2?5:4} ${t.expTime}, since ${A}·${b}<sup>${b===2?5:4}</sup> = ${target}.`}
+    ],
+    grid:{xmax:tableX[tableX.length-1],xstep:1,ymax:niceCeil(target, target>200?100:50),ystep:target>200?100:50,xlabel:t.expTime,ylabel:t.expUnit}
+  };
+}
+
+function expDecay(rng, t){
+  const A = pick(rng,[160,240,320]);
+  const tableX=[0,1,2,3,4];
+  const t0=3;
+  return {
+    tag:"Part C · Exponential",
+    meta:{kind:"exp", growth:false, fname:"L"},
+    story:`${t.expStory(A)}`,
+    eq:`L(t) = ${A} · (½)<sup>t</sup>`,
+    tableX, varX:"t",
+    tableY:tableX.map(x=>A*Math.pow(0.5,x)),
+    questions:[
+      {q:`Find L(${t0}) and explain what it means in the story.`,
+       a:`L(${t0}) = ${A}·(½)<sup>${t0}</sup> = ${A/8} ${t.expUnit} after ${t0} ${t.expTime}.`},
+      {q:`What does the base ½ tell you about how this changes?`,
+       a:`It is cut in half every ${t.expTimeSing} — exponential decay, not a constant subtraction.`},
+      {q:`Will L(t) ever reach exactly 0? Use the equation to explain.`,
+       a:`No. Halving a positive number never produces 0; the graph approaches the t-axis (an asymptote at L = 0) but never touches it.`}
+    ],
+    grid:{xmax:4,xstep:1,ymax:A,ystep:A/8,xlabel:t.expTime,ylabel:t.expUnit}
+  };
+}
+
+/* ============================================================
+   PART D — compare the three graphs (built from the student's
+   actual functions, so the answer key is version-specific)
+   ============================================================ */
+function comparePart(parts){
+  const L = parts.find(p=>p.meta.kind==="linear");
+  const Q = parts.find(p=>p.meta.kind==="quad");
+  const E = parts.find(p=>p.meta.kind==="exp");
+  const lf=L.meta.fname, qf=Q.meta.fname, ef=E.meta.fname;
+
+  // evidence pulled from their actual tables
+  const lStep = L.tableX[1]-L.tableX[0];
+  const lDiff = L.tableY[1]-L.tableY[0];
+  const eRatio = Math.round((E.tableY[1]/E.tableY[0])*100)/100;
+  const qD1 = Q.tableY[1]-Q.tableY[0];
+  const qD2 = Q.tableY[2]-Q.tableY[1];
+
+  const questions = [
+    {q:`Before you graphed anything, the equations already told you each shape. Identify which equation produces a straight line, which produces a parabola, and which produces an exponential curve — and name the exact feature of each equation that gives it away.`,
+     a:`${lf} is linear: the variable appears to the first power only, so the graph is a straight line (${L.meta.inc ? "rising — positive slope" : "falling — negative slope"}). ${qf} is quadratic: the squared term makes a parabola, and its negative coefficient makes it open downward. ${ef} is exponential: the variable is in the <em>exponent</em>, so the graph is a curve that ${E.meta.growth ? "bends upward, rising faster and faster" : "drops steeply at first, then levels off toward 0"}.`},
+    {q:`Use your three completed tables as evidence. One function changes by the same <em>amount</em> each step, one changes by the same <em>multiplier</em> each step, and one has changes that themselves change. Match each function to its pattern and show the numbers that prove it.`,
+     a:`${lf}: every step of ${fmt(lStep)} in ${L.varX} changes the output by exactly ${fmt(lDiff)} — constant difference, the signature of a line. ${ef}: each step multiplies the output by ${eRatio} — constant ratio, the signature of exponential change. ${qf}: the first differences are not constant (${fmt(qD1)}, then ${fmt(qD2)}, …) — they shrink and switch sign at the vertex, which is why the graph turns around.`},
+    {q:`Which of your three functions has a maximum value? For the other two, describe what happens to each graph as the input keeps growing (the end behavior).`,
+     a:`Only ${qf} has a maximum — the vertex, where the graph turns from rising to falling. ${lf} ${L.meta.inc ? "has no maximum: it rises forever at the same steady rate" : `falls steadily and hits 0 at ${L.varX} = ${fmt(L.meta.zeroX)}; in the story, that's where it stops`}. ${ef} ${E.meta.growth ? "has no maximum either: it grows without bound, faster and faster" : "has its largest value at the very start, then decreases toward 0 forever without ever reaching it"}.`},
+    E.meta.growth
+      ? {q:`Suppose all three graphs kept going far to the right. Which output would eventually be the largest, and why is that guaranteed no matter what the starting numbers are?`,
+         a:`${ef}. Repeated multiplication eventually beats any constant rate of addition: the line gains the same amount each step, but the exponential's gains keep growing. Meanwhile ${qf} is past its vertex and heading down, so it eventually becomes the smallest. This is why exponential growth outruns everything linear in the long run.`}
+      : {q:`Both ${qf} and ${ef} eventually head toward 0, but in fundamentally different ways. One actually <em>reaches</em> 0 and one never does. Which is which, and what feature of each graph explains the difference?`,
+         a:`${qf} actually reaches 0 — the parabola crosses the horizontal axis at an x-intercept (a zero of the function). ${ef} never does: cutting a positive number in half always leaves something, so the graph has a horizontal asymptote at 0 — it gets closer forever without touching.`}
+  ];
+
+  return {
+    tag:"Part D · Compare the shapes",
+    meta:{kind:"compare"},
+    story:`You now have three graphs from the same story: a line, a parabola, and an exponential curve. Put them side by side. These questions are about <em>why</em> the shapes differ — use your equations, tables, and graphs from Parts A–C as evidence.`,
+    eq:null, tableX:null, grid:null,
+    questions
+  };
+}
+
+/* ============================================================
+   STORY THEMES — wording wrappers around the math builders
+   ============================================================ */
+const THEMES = [
+{
+  title:"Taco Cart Tycoon",
+  intro:()=>`You just took over a taco cart for the summer. Today you're running the numbers on costs, pricing, and your cart's new social media account.`,
+  build(rng){
+    const t1={
+      linStory:(m,b)=>`Each taco costs ${money(m)} in ingredients, and renting the cart costs ${money(b)} per day no matter what. Your daily cost for making x tacos is:`,
+      unit:x=>`making ${x} tacos`, unitSing:"taco", unitPl:"tacos"
+    };
+    const t2={
+      quadStory:(a,h,k)=>`A friend who took statistics modeled your daily profit P (in dollars) based on the price p you charge per taco:`
+    };
+    const t3={
+      expStory:(A,b)=>`Your cart's new account started with ${A} followers, and a video went mildly viral — followers are ${b===2?"doubling":"tripling"} every week:`,
+      expUnit:"followers", expTime:"weeks", expTimeSing:"week"
+    };
+    return [linearCost(rng,t1), quadProfit(rng,t2), expGrowth(rng,t3)];
+  }
+},
+{
+  title:"Rooftop Drone Show",
+  intro:()=>`You're piloting a drone for a rooftop light show tonight. Battery, launch physics, and a viral clip are all on your mind.`,
+  build(rng){
+    const t1={
+      linStory:(m,s)=>`Your drone's battery starts at ${s}% and drains ${m}% per minute of flight. The battery level after t minutes is:`,
+      linUnitX:"minutes", linUnitY:"% battery", linZeroMeaning:"That's when the battery dies and the drone must land."
+    };
+    const t2={
+      quadStory:(v,s)=>`For the finale, a flare is launched upward at ${v} ft/s from a platform ${s} ft above the roof. Its height in feet after t seconds is:`
+    };
+    const t3={
+      expStory:(A,b)=>`You posted last night's test flight. It started with ${A} hundred views, and views are ${b===2?"doubling":"tripling"} every day:`,
+      expUnit:"hundred views", expTime:"days", expTimeSing:"day"
+    };
+    return [linearDecline(rng,t1), quadProjectile(rng,t2), expGrowth(rng,t3)];
+  }
+},
+{
+  title:"Going Live",
+  intro:()=>`You just started streaming your favorite game. Tonight's session involves earnings, an in-game trick shot, and a subscriber surge.`,
+  build(rng){
+    const t1={
+      fname:"E", yLabel:"earnings ($)",
+      linStory:(m,b)=>`Your channel earns ${money(m)} per hour streamed, plus a flat ${money(b)} sponsor bonus per session. Your earnings for x hours are:`,
+      unit:x=>`streaming for ${x} hours`, unitSing:"hour", unitPl:"hours"
+    };
+    const t2={
+      quadStory:(v,s)=>`In-game, your character fires a grappling hook upward at ${v} ft/s from a ledge ${s} ft above the ground. Its height after t seconds is:`
+    };
+    const t3={
+      expStory:(A,b)=>`A clip of the shot blew up. You started with ${A} subscribers, and subs are ${b===2?"doubling":"tripling"} every week:`,
+      expUnit:"subscribers", expTime:"weeks", expTimeSing:"week"
+    };
+    return [linearCost(rng,t1), quadProjectile(rng,t2), expGrowth(rng,t3)];
+  }
+},
+{
+  title:"The Plant Hustle",
+  intro:()=>`Your balcony plant hobby just became a small business. Today: bamboo, a sprinkler problem, and an invasive duckweed situation.`,
+  build(rng){
+    const t1={
+      linStory:(m,b)=>`Each seedling pot costs ${money(m)} in soil and supplies, and your market-stand permit costs ${money(b)} per weekend. Your weekend cost for x pots is:`,
+      unit:x=>`prepping ${x} pots`, unitSing:"pot", unitPl:"pots"
+    };
+    const t2={
+      quadStory:(v,s)=>`Your new sprinkler shoots a jet of water upward at ${v} ft/s from a nozzle ${s} ft off the ground. The water's height after t seconds is:`
+    };
+    const t3={
+      expStory:(A)=>`Duckweed took over your pond tub, covering ${A} square inches. Each day of treatment cuts the covered area in half:`,
+      expUnit:"sq. inches", expTime:"days", expTimeSing:"day"
+    };
+    return [linearCost(rng,t1), quadProjectile(rng,t2), expDecay(rng,t3)];
+  }
+},
+{
+  title:"Coaster Day",
+  intro:()=>`You scored a summer job at the amusement park. Your shift covers the wristband booth, the splash fountain, and the line for the new coaster.`,
+  build(rng){
+    const t1={
+      fname:"T", yLabel:"drawer total ($)",
+      linStory:(m,b)=>`Wristbands sell for ${money(m)} each, and your booth has a ${money(b)} cash float that counts toward the drawer total. The drawer total after selling x wristbands is:`,
+      unit:x=>`selling ${x} wristbands`, unitSing:"wristband", unitPl:"wristbands"
+    };
+    const t2={
+      quadStory:(v,s)=>`The plaza fountain fires a water jet upward at ${v} ft/s from a nozzle ${s} ft above the pool. The jet's height after t seconds is:`
+    };
+    const t3={
+      expStory:(A)=>`When the park opens, ${A} people are in line for the new coaster. Every hour, the line shrinks to half its size:`,
+      expUnit:"people", expTime:"hours", expTimeSing:"hour"
+    };
+    return [linearCost(rng,t1), quadProjectile(rng,t2), expDecay(rng,t3)];
+  }
+},
+{
+  title:"Cookie Empire",
+  intro:()=>`Your cookie side-hustle is taking off. Today you're checking costs, testing prices, and feeding a very ambitious sourdough starter.`,
+  build(rng){
+    const t1={
+      linStory:(m,b)=>`Each dozen cookies costs ${money(m)} in ingredients, and your shared-kitchen rental is ${money(b)} per baking day. Your cost for baking x dozen is:`,
+      unit:x=>`baking ${x} dozen`, unitSing:"dozen", unitPl:"dozens"
+    };
+    const t2={
+      quadStory:(a,h,k)=>`You tested different prices at the farmers market. Your daily profit P (in dollars) at a price of p dollars per dozen follows:`
+    };
+    const t3={
+      expStory:(A,b)=>`Your sourdough starter weighs ${A} grams, and with feeding it ${b===2?"doubles":"triples"} every day:`,
+      expUnit:"grams", expTime:"days", expTimeSing:"day"
+    };
+    return [linearCost(rng,t1), quadProfit(rng,t2), expGrowth(rng,t3)];
+  }
+}
+];
+
+/* ============================================================
+   RENDERING
+   ============================================================ */
+let currentSeed = null;
+let charName = "";
+
+function fmt(n){
+  return Number.isInteger(n) ? n : Math.round(n*100)/100;
+}
+
+function escapeHTML(s){
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function render(){
+  const out = document.getElementById('output');
+  if(currentSeed === null){ out.innerHTML=""; return; }
+  const rng = mulberry32(currentSeed + 0x9E3779B9);
+  const theme = THEMES[Math.floor(rng()*THEMES.length)];
+  const parts = theme.build(rng);
+  parts.push(comparePart(parts));
+  const vcode = seedToCode(currentSeed);
+  const base = theme.intro();
+  const introText = charName
+    ? `${escapeHTML(charName)}, ${base.charAt(0).toLowerCase()}${base.slice(1)}`
+    : base;
+
+  let html = `
+    <div class="panel">
+      <h2 class="story-title">${theme.title}</h2>
+      <p class="intro">${introText}</p>
+      <p><strong>${COURSE_LABEL}</strong>${charName ? ` · Character: ${escapeHTML(charName)}` : ""} · Version code: <span class="vcode">#${vcode}</span></p>
+      <p><strong>Write down your code (#${vcode}) and include it at the top of your discussion post.</strong> If you close this page, entering the code brings your exact story back.</p>
+      <p>Parts A–C: complete the table, answer the questions showing your work, then plot the points and sketch the graph on the grid. Part D: compare all three graphs.</p>
+    </div>`;
+
+  parts.forEach((p, pi)=>{
+    html += `<section class="part">
+      <span class="part-tag">${p.tag}</span>
+      <p>${p.story}</p>
+      ${p.eq ? `<div class="eq">${p.eq}</div>` : ""}
+      ${p.tableX ? `<table class="vals">
+        <tr><th>${p.varX}</th>${p.tableX.map(x=>`<td>${fmt(x)}</td>`).join("")}</tr>
+        <tr><th>${p.eq.split("(")[0]}(${p.varX})</th>${p.tableX.map(()=>`<td><input class="cell" type="text" inputmode="decimal" aria-label="table value"></td>`).join("")}</tr>
+      </table>` : ""}
+      <ol class="qs">${p.questions.map((q,qi)=>`<li>${q.q}<textarea class="ans" aria-label="Answer ${qi+1}" placeholder="Type your answer and show your work…"></textarea></li>`).join("")}</ol>
+      ${p.grid ? `<div class="gridbox">
+        <p>Plot your table points <span class="gridhint">(click a grid intersection to add a point; click it again to remove)</span></p>
+        ${gridSVG(p.grid, pi)}
+      </div>` : ""}
+    </section>`;
+  });
+
+  out.innerHTML = html;
+  gridConfigs = {};
+  parts.forEach((p,pi)=>{ if(p.grid) gridConfigs[pi]=p.grid; });
+  attachGridListeners();
+  document.getElementById('footNote').textContent =
+    "Each code maps to exactly one story. Your answers stay on this page until you save the PDF — don't refresh before saving.";
+}
+
+/* ---------- click-to-plot points on the grids ---------- */
+let gridConfigs = {};
+const GEO = {W:340,H:280,padL:46,padB:36,padT:14,padR:14};
+function attachGridListeners(){
+  document.querySelectorAll('svg.coord[data-grid]').forEach(svg=>{
+    svg.addEventListener('click', e=>{
+      const cfg = gridConfigs[svg.dataset.grid];
+      if(!cfg) return;
+      const r = svg.getBoundingClientRect();
+      const sx = (e.clientX - r.left) * (GEO.W / r.width);
+      const sy = (e.clientY - r.top) * (GEO.H / r.height);
+      const plotW = GEO.W-GEO.padL-GEO.padR, plotH = GEO.H-GEO.padT-GEO.padB;
+      const nx = Math.round(cfg.xmax/cfg.xstep), ny = Math.round(cfg.ymax/cfg.ystep);
+      let i = Math.round((sx-GEO.padL)/(plotW/nx));
+      let j = Math.round((GEO.padT+plotH-sy)/(plotH/ny));
+      if(i<0||i>nx||j<0||j>ny) return;
+      const key = i+"_"+j;
+      const existing = svg.querySelector(`circle[data-key="${key}"]`);
+      if(existing){ existing.remove(); return; }
+      const cx = GEO.padL + plotW*i/nx;
+      const cy = GEO.padT + plotH - plotH*j/ny;
+      const dot = document.createElementNS("http://www.w3.org/2000/svg","circle");
+      dot.setAttribute("cx",cx); dot.setAttribute("cy",cy); dot.setAttribute("r",4.5);
+      dot.setAttribute("fill","#c8401f"); dot.setAttribute("data-key",key);
+      svg.appendChild(dot);
+    });
+  });
+}
+
+/* ---------- export: bake typed answers + plotted points into a printable page ---------- */
+function buildPrintableHTML(){
+  const clone = document.getElementById('output').cloneNode(true);
+  // replace inputs with their typed values
+  clone.querySelectorAll('input.cell').forEach(inp=>{
+    const span = document.createElement('span');
+    span.textContent = inp.value || "—";
+    span.style.cssText = "color:#c8401f;font-weight:700";
+    inp.replaceWith(span);
+  });
+  clone.querySelectorAll('textarea.ans').forEach(ta=>{
+    const div = document.createElement('div');
+    div.textContent = ta.value || "(no answer typed)";
+    div.style.cssText = "border-left:3px solid #c8401f;padding:6px 10px;margin-top:6px;white-space:pre-wrap;background:#fdf6f4;border-radius:0 6px 6px 0";
+    ta.replaceWith(div);
+  });
+  const css = document.querySelector('style').innerHTML;
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Algebra Story Problem</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>${css}
+body{background:none !important}
+.part{box-shadow:none}
+@page{margin:14mm}
+</style></head>
+<body><div class="wrap">${clone.innerHTML}</div>
+<scr`+`ipt>window.onload=()=>setTimeout(()=>window.print(),400);</scr`+`ipt>
+</body></html>`;
+}
+
+document.getElementById('genBtn').addEventListener('click', ()=>{
+  charName = document.getElementById('charInput').value.trim();
+  currentSeed = randomSeed();
+  render();
+});
+document.getElementById('loadBtn').addEventListener('click', ()=>{
+  const seed = codeToSeed(document.getElementById('codeInput').value);
+  if(seed === null){ alert("That code isn't valid. Codes are 4 characters, like K7Q2. (No O, 0, I, 1, or L.)"); return; }
+  charName = document.getElementById('charInput').value.trim();
+  currentSeed = seed;
+  render();
+});
+document.getElementById('codeInput').addEventListener('keydown', e=>{
+  if(e.key==='Enter') document.getElementById('loadBtn').click();
+});
+document.getElementById('printBtn').addEventListener('click', ()=>{
+  if(currentSeed === null){ alert("Generate a story first."); return; }
+  const docHTML = buildPrintableHTML();
+  const blob = new Blob([docHTML], {type:"text/html"});
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, "_blank");
+  if(win){
+    // print dialog opens in the new tab; student chooses "Save as PDF"
+    setTimeout(()=>URL.revokeObjectURL(url), 60000);
+  } else {
+    // popups blocked: download the file instead, student opens it and prints
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "algebra-story-" + seedToCode(currentSeed) + ".html";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 60000);
+    alert("Pop-ups are blocked, so the worksheet downloaded as a file instead. Open it, then press Ctrl+P (Cmd+P on Mac) and choose 'Save as PDF'.");
+  }
+});
+</script>
+</body>
+</html>

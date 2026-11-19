@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bravo Two-Seven: Where Does the Center Go?</title>
+<style>
+  :root { --navy:#13324f; --blue:#1a6fa3; --sea:#d7ecf8; --orange:#e8871e; --green:#16a34a; --red:#dc2626; --ink:#1a1a1a; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#eef3f7; color:var(--ink); padding:20px; }
+  .wrap { max-width:900px; margin:0 auto; background:#fff; border-radius:14px; box-shadow:0 2px 10px rgba(0,0,0,.08); overflow:hidden; }
+  header { background:var(--navy); color:#fff; padding:18px 22px; }
+  header h1 { margin:0; font-size:22px; letter-spacing:.3px; }
+  header p { margin:4px 0 0; opacity:.85; font-size:14px; }
+  .body { padding:18px 22px 24px; }
+  .story { background:#f6f9fc; border-left:4px solid var(--blue); padding:12px 16px; border-radius:6px; font-size:15px; line-height:1.55; }
+  .story p { margin:0 0 8px; }
+  .story p:last-child { margin:0; }
+  .steps { display:flex; gap:6px; margin:16px 0 10px; flex-wrap:wrap; }
+  .pill { font-size:12px; font-weight:700; padding:5px 10px; border-radius:999px; background:#e5e7eb; color:#6b7280; }
+  .pill.on { background:var(--blue); color:#fff; }
+  .pill.done { background:#d1fae5; color:#065f46; }
+  .panel { border:1px solid #dbe4ec; border-radius:10px; padding:14px 16px; margin-bottom:12px; }
+  .panel h3 { margin:0 0 6px; font-size:16px; color:var(--navy); }
+  .panel p { margin:0 0 10px; font-size:15px; line-height:1.5; }
+  .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  input[type=number] { width:90px; padding:9px 10px; font-size:16px; border:1px solid #c9d6e0; border-radius:8px; font-family:inherit; }
+  button { background:var(--blue); color:#fff; border:none; padding:10px 16px; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit; }
+  button:hover { background:#14587f; }
+  button.ghost { background:#e5e7eb; color:var(--ink); }
+  button.ghost:hover { background:#d1d5db; }
+  button:disabled { background:#a9c7d8; cursor:not-allowed; }
+  .msg { font-size:14px; font-weight:600; min-height:20px; margin-top:8px; }
+  .ok { color:var(--green); } .bad { color:var(--red); }
+  .eq { font-family:'Courier New',monospace; font-size:17px; font-weight:700; background:#eaf2f8; color:var(--navy); padding:8px 12px; border-radius:8px; display:inline-block; }
+  .chip { display:inline-block; background:#fff4e0; border:1px solid #f0c040; color:#7a5c00; font-size:13px; font-weight:700; padding:4px 10px; border-radius:999px; }
+  .chart { position:relative; border-radius:10px; overflow:hidden; border:1px solid #c7d7e4; }
+  canvas { display:block; width:100%; }
+  .verdict { border-radius:10px; padding:14px 16px; margin-top:12px; font-size:15px; line-height:1.55; display:none; }
+  .verdict.found { background:#ecfdf5; border:1px solid #6ee7b7; }
+  .verdict.lost { background:#fef2f2; border:1px solid #fca5a5; }
+  .verdict h4 { margin:0 0 6px; font-size:17px; }
+  .hidden { display:none; }
+  @media (max-width:600px){ body{padding:6px;} .body{padding:14px;} header h1{font-size:19px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Bravo Two-Seven: Where Does the Center Go?</h1>
+    <p>A search circle, a fuel limit, and one point that decides everything.</p>
+  </header>
+  <div class="body">
+    <div class="story" id="story">
+      <p><strong>0347, North Pacific.</strong> A friendly radar track blinks out. No mayday. Nineteen minutes later the pilot's beacon fires four weak pulses, then goes silent.</p>
+      <p>The chart shows two points: <strong>last radar contact</strong> and the <strong>final beacon fix</strong>. They are the endpoints of the flight leg, the circle's diagonal. The pilot ejected somewhere on that diagonal. Nobody knows where.</p>
+      <p>Fuel allows one search circle with a radius of <strong>half the diagonal</strong>. Lieutenant Aldana wants the center at last radar contact: "It's the only hard data we have." Lieutenant Reyes disagrees. You build the plan.</p>
+    </div>
+
+    <div class="steps">
+      <span class="pill on" id="pill1">1 · The diagonal</span>
+      <span class="pill" id="pill2">2 · The center</span>
+      <span class="pill" id="pill3">3 · Launch</span>
+      <span class="pill" id="pill4">4 · Inquiry</span>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="panel" id="step1">
+      <h3>Step 1: How long is the diagonal?</h3>
+      <p id="step1Text"></p>
+      <div class="row">
+        <span>D =</span><input type="number" id="dInput" step="any" inputmode="decimal">
+        <span>nautical miles</span>
+        <button id="checkD">Check</button>
+        <button class="ghost" id="hintD">Hint</button>
+      </div>
+      <div class="msg" id="dMsg"></div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="panel hidden" id="step2">
+      <h3>Step 2: Place the center of the search circle</h3>
+      <p>Your radius is fixed by fuel: <span class="chip" id="rChip"></span> Drag the orange marker on the chart, or type the center. Then commit your plan.</p>
+      <div class="row" style="margin-bottom:10px;">
+        <span>(h, k) = (</span><input type="number" id="hInput" step="0.5" inputmode="decimal">
+        <span>,</span><input type="number" id="kInput" step="0.5" inputmode="decimal"><span>)</span>
+        <button class="ghost" id="aldanaBtn">Use Aldana's center</button>
+      </div>
+      <div class="row" style="margin-bottom:10px;"><span class="eq" id="eqText"></span></div>
+      <button id="commitBtn">Commit plan and launch</button>
+    </div>
+
+    <div class="chart"><canvas id="chart"></canvas></div>
+
+    <div class="verdict" id="verdict"></div>
+
+    <!-- STEP 4 -->
+    <div class="panel hidden" id="step4" style="margin-top:12px;">
+      <h3>Step 4: Board of inquiry</h3>
+      <p id="inquiryText"></p>
+      <div class="row">
+        <button id="retryBtn">Try a different center</button>
+        <button class="ghost hidden" id="newMissionBtn">New mission, new numbers</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- Missions: endpoints chosen so D, r, and the midpoint stay clean ----------
+const MISSIONS = [
+  { A:{x:0,y:0},   B:{x:16,y:12} },
+  { A:{x:2,y:1},   B:{x:14,y:17} },
+  { A:{x:1,y:-2},  B:{x:7,y:6} },
+  { A:{x:-6,y:1},  B:{x:18,y:11} },
+  { A:{x:-3,y:-2}, B:{x:9,y:3} },
+  { A:{x:4,y:10},  B:{x:-8,y:-6} }
+];
+let missionIndex = 0;
+let A, B, D, r, M, E;           // endpoints, diagonal, radius, midpoint, ejection point
+let center = { x:0, y:0 };
+let stage = 1;                    // 1 diagonal, 2 center, 3 flying, 4 inquiry
+let solvedFull = false;
+
+const $ = id => document.getElementById(id);
+const fmt = n => (Math.abs(n - Math.round(n)) < 1e-9 ? String(Math.round(n)) : String(+n.toFixed(2)));
+const pt = p => `(${fmt(p.x)}, ${fmt(p.y)})`;
+const sqTerm = (v, c) => c === 0 ? `${v}²` : (c > 0 ? `(${v} − ${fmt(c)})²` : `(${v} + ${fmt(-c)})²`);
+
+function loadMission(i) {
+  const m = MISSIONS[i];
+  A = m.A; B = m.B;
+  D = Math.hypot(B.x - A.x, B.y - A.y);
+  r = D / 2;
+  M = { x:(A.x + B.x) / 2, y:(A.y + B.y) / 2 };
+  E = { x:A.x + 0.75 * (B.x - A.x), y:A.y + 0.75 * (B.y - A.y) };   // ejection: 3/4 of the way along the leg
+  center = { x:A.x, y:A.y };
+  stage = 1; solvedFull = false; heli = null; revealed = false;
+  $('step1Text').innerHTML = `Last radar contact is at <strong>${pt(A)}</strong>. The final beacon fix is at <strong>${pt(B)}</strong>. Use the distance formula to find the length of the diagonal between them.`;
+  $('dInput').value = ''; $('dMsg').textContent = '';
+  show('step1', true); show('step2', false); show('step4', false);
+  $('verdict').style.display = 'none';
+  $('newMissionBtn').classList.add('hidden');
+  setPills();
+  syncCenterInputs();
+  resize();
+}
+
+function show(id, on) { $(id).classList.toggle('hidden', !on); }
+function setPills() {
+  for (let i = 1; i <= 4; i++) {
+    const p = $('pill' + i);
+    p.classList.toggle('on', i === stage || (stage === 3 && i === 3));
+    p.classList.toggle('done', i < stage);
+  }
+}
+
+// ---------- Step 1 ----------
+$('checkD').onclick = () => {
+  const v = parseFloat($('dInput').value);
+  if (Number.isNaN(v)) { msg('dMsg', 'Enter a number first.', false); return; }
+  if (Math.abs(v - D) < 0.05) {
+    msg('dMsg', `Correct. The diagonal is ${fmt(D)} nautical miles.`, true);
+    stage = 2; setPills();
+    $('rChip').textContent = `D = ${fmt(D)} nm, so r = D/2 = ${fmt(r)} nm`;
+    setTimeout(() => show('step1', false), 900);
+    show('step2', true);
+    syncCenterInputs();
+    $('chart').style.touchAction = 'none';
+  } else if (Math.abs(v - D * D) < 0.05) {
+    msg('dMsg', `That's D². Take the square root.`, false);
+  } else {
+    msg('dMsg', 'Not quite. Recheck the differences in x and in y.', false);
+  }
+};
+$('hintD').onclick = () => {
+  msg('dMsg', `D = √((x₂ − x₁)² + (y₂ − y₁)²). Start with the change in x: ${fmt(B.x)} − (${fmt(A.x)}).`, null);
+};
+function msg(id, text, good) { const el = $(id); el.textContent = text; el.className = 'msg' + (good === true ? ' ok' : good === false ? ' bad' : ''); }
+
+// ---------- Step 2 ----------
+function syncCenterInputs() {
+  $('hInput').value = fmt(center.x); $('kInput').value = fmt(center.y);
+  $('eqText').textContent = `${sqTerm('x', center.x)} + ${sqTerm('y', center.y)} = ${fmt(r * r)}`;
+}
+$('hInput').oninput = () => { const v = parseFloat($('hInput').value); if (!Number.isNaN(v)) { center.x = v; syncCenterInputs(); } };
+$('kInput').oninput = () => { const v = parseFloat($('kInput').value); if (!Number.isNaN(v)) { center.y = v; syncCenterInputs(); } };
+$('aldanaBtn').onclick = () => { center = { x:A.x, y:A.y }; syncCenterInputs(); };
+$('commitBtn').onclick = () => {
+  if (stage !== 2) return;
+  stage = 3; setPills();
+  show('step2', false);
+  $('chart').style.touchAction = 'auto';
+  startSearch();
+};
+
+// ---------- Step 3: helicopter search ----------
+let heli = null, revealed = false;
+function searchPath(c, rad) {
+  // expanding-square pattern from the center, stopped at the circle edge
+  const s = rad / 5, path = [{ x:c.x, y:c.y }];
+  const dirs = [[1,0],[0,1],[-1,0],[0,-1]];
+  let p = { x:c.x, y:c.y }, len = s, d = 0;
+  for (let leg = 0; leg < 40; leg++) {
+    const n = { x:p.x + dirs[d][0] * len, y:p.y + dirs[d][1] * len };
+    if (Math.hypot(n.x - c.x, n.y - c.y) > rad * 1.02) break;
+    path.push(n); p = n; d = (d + 1) % 4;
+    if (leg % 2 === 1) len += s;
+  }
+  return path;
+}
+function startSearch() {
+  const path = searchPath(center, r);
+  let total = 0; const seg = [];
+  for (let i = 1; i < path.length; i++) { const L = Math.hypot(path[i].x - path[i-1].x, path[i].y - path[i-1].y); seg.push(L); total += L; }
+  heli = { path, seg, total, t0: performance.now(), dur: 3200 };
+}
+function heliPosition(now) {
+  const f = Math.min(1, (now - heli.t0) / heli.dur);
+  let dist = f * heli.total;
+  for (let i = 0; i < heli.seg.length; i++) {
+    if (dist <= heli.seg[i]) { const a = heli.path[i], b = heli.path[i+1], u = dist / heli.seg[i]; return { x:a.x + (b.x - a.x) * u, y:a.y + (b.y - a.y) * u, i, f }; }
+    dist -= heli.seg[i];
+  }
+  const last = heli.path[heli.path.length - 1];
+  return { x:last.x, y:last.y, i:heli.seg.length, f:1 };
+}
+function coverage(c) {
+  let inside = 0; const N = 400;
+  for (let i = 0; i <= N; i++) { const t = i / N; const x = A.x + t * (B.x - A.x), y = A.y + t * (B.y - A.y); if ((x - c.x) ** 2 + (y - c.y) ** 2 <= r * r + 1e-9) inside++; }
+  return inside / (N + 1);
+}
+function finishSearch() {
+  revealed = true; stage = 4; setPills();
+  const val = (E.x - center.x) ** 2 + (E.y - center.y) ** 2;
+  const found = val <= r * r + 1e-9;
+  const cov = coverage(center);
+  const v = $('verdict');
+  v.className = 'verdict ' + (found ? 'found' : 'lost');
+  const test = `${sqTerm(fmt(E.x), center.x)} + ${sqTerm(fmt(E.y), center.y)} = <strong>${fmt(val)}</strong> ${found ? '≤' : '>'} r² = ${fmt(r * r)}`;
+  v.innerHTML = found
+    ? `<h4 class="ok">Raft spotted. Bravo Two-Seven is coming home.</h4>The flight data recorder puts the ejection at <strong>${pt(E)}</strong>.<br>Test: ${test}. Inside your circle.<br>Your circle covers <strong>${Math.round(cov * 100)}%</strong> of the flight leg.`
+    : `<h4 class="bad">Bingo fuel. The helicopters turn back with nothing.</h4>The flight data recorder puts the ejection at <strong>${pt(E)}</strong>.<br>Test: ${test}. Outside your circle by ${fmt(Math.sqrt(val) - r)} nm.<br>Your circle covers only <strong>${Math.round(cov * 100)}%</strong> of the flight leg.`;
+  v.style.display = 'block';
+  solvedFull = cov > 0.995;
+  $('inquiryText').innerHTML = solvedFull
+    ? `Your circle covers the entire diagonal. Check the endpoints: ${pt(A)} and ${pt(B)} both sit exactly on your circle. Why is that the only center that works with a radius of D/2?`
+    : `Same radius, same equation form. Can you find a center that covers <strong>100%</strong> of the flight leg, wherever the pilot ejected? Before you try, decide where both endpoints should sit relative to your circle.`;
+  $('newMissionBtn').classList.toggle('hidden', !solvedFull);
+  show('step4', true);
+}
+$('retryBtn').onclick = () => {
+  stage = 2; setPills(); heli = null; revealed = false;
+  $('verdict').style.display = 'none'; show('step4', false); show('step2', true);
+  $('chart').style.touchAction = 'none';
+};
+$('newMissionBtn').onclick = () => { missionIndex = (missionIndex + 1) % MISSIONS.length; loadMission(missionIndex); $('story').scrollIntoView({ behavior:'smooth' }); };
+
+// ---------- Chart ----------
+const canvas = $('chart'), ctx = canvas.getContext('2d');
+let view = null, cssW = 0, cssH = 0;
+function resize() {
+  cssW = canvas.parentElement.clientWidth;
+  cssH = Math.round(Math.min(cssW * (cssW < 600 ? 1.05 : 0.8), 620));
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = cssW * dpr; canvas.height = cssH * dpr; canvas.style.height = cssH + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const pad = r + 1;
+  const xmin = Math.min(A.x, B.x) - pad, xmax = Math.max(A.x, B.x) + pad;
+  const ymin = Math.min(A.y, B.y) - pad, ymax = Math.max(A.y, B.y) + pad;
+  const s = Math.min(cssW / (xmax - xmin), cssH / (ymax - ymin));
+  view = { s, ox: cssW / 2 - s * (xmin + xmax) / 2, oy: cssH / 2 + s * (ymin + ymax) / 2, xmin, xmax, ymin, ymax };
+}
+const X = x => view.ox + x * view.s, Y = y => view.oy - y * view.s;
+const toWorld = (px, py) => ({ x:(px - view.ox) / view.s, y:(view.oy - py) / view.s });
+const snap = v => Math.round(v * 2) / 2;
+
+function draw(now) {
+  const w = cssW, h = cssH, t = now / 1000;
+  // sea
+  const g = ctx.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#bfe0f5'); g.addColorStop(1, '#e3f2fb');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+  // animated swell
+  ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1.2;
+  for (let row = 0; row < 9; row++) {
+    const y0 = (row + 0.5) * h / 9;
+    for (let col = 0; col < 7; col++) {
+      const x0 = ((col * w / 6) + (row % 2) * w / 12 + t * 8) % (w + 40) - 20;
+      ctx.beginPath(); ctx.arc(x0, y0 + Math.sin(t * 1.3 + row + col) * 2, 9, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+    }
+  }
+  // grid
+  const step = view.s > 22 ? 2 : 4;
+  ctx.font = '11px sans-serif'; ctx.fillStyle = 'rgba(19,50,79,0.55)';
+  for (let gx = Math.ceil(view.xmin / step) * step; gx <= view.xmax; gx += step) {
+    ctx.strokeStyle = gx === 0 ? 'rgba(19,50,79,0.45)' : 'rgba(19,50,79,0.12)'; ctx.lineWidth = gx === 0 ? 1.5 : 1;
+    ctx.beginPath(); ctx.moveTo(X(gx), 0); ctx.lineTo(X(gx), h); ctx.stroke();
+    ctx.textAlign = 'center'; ctx.fillText(gx, X(gx), h - 6);
+  }
+  for (let gy = Math.ceil(view.ymin / step) * step; gy <= view.ymax; gy += step) {
+    ctx.strokeStyle = gy === 0 ? 'rgba(19,50,79,0.45)' : 'rgba(19,50,79,0.12)'; ctx.lineWidth = gy === 0 ? 1.5 : 1;
+    ctx.beginPath(); ctx.moveTo(0, Y(gy)); ctx.lineTo(w, Y(gy)); ctx.stroke();
+    ctx.textAlign = 'left'; ctx.fillText(gy, 4, Y(gy) - 3);
+  }
+  // compass
+  ctx.save(); ctx.translate(w - 34, 34); ctx.fillStyle = 'rgba(19,50,79,0.7)';
+  ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(5, 0); ctx.lineTo(0, 18); ctx.lineTo(-5, 0); ctx.closePath(); ctx.fill();
+  ctx.font = '700 11px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('N', 0, -22); ctx.restore();
+
+  // search circle
+  if (stage >= 2) {
+    ctx.beginPath(); ctx.arc(X(center.x), Y(center.y), r * view.s, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(232,135,30,0.12)'; ctx.fill();
+    ctx.setLineDash([8, 6]); ctx.strokeStyle = '#e8871e'; ctx.lineWidth = 2.5; ctx.stroke(); ctx.setLineDash([]);
+  }
+  // flight leg (diagonal), colored by coverage once revealed
+  if (revealed) {
+    const N = 120;
+    for (let i = 0; i < N; i++) {
+      const t0 = i / N, t1 = (i + 1) / N, tm = (t0 + t1) / 2;
+      const mx = A.x + tm * (B.x - A.x), my = A.y + tm * (B.y - A.y);
+      const inside = (mx - center.x) ** 2 + (my - center.y) ** 2 <= r * r + 1e-9;
+      ctx.strokeStyle = inside ? '#16a34a' : '#dc2626'; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(X(A.x + t0 * (B.x - A.x)), Y(A.y + t0 * (B.y - A.y))); ctx.lineTo(X(A.x + t1 * (B.x - A.x)), Y(A.y + t1 * (B.y - A.y))); ctx.stroke();
+    }
+  } else {
+    ctx.strokeStyle = '#13324f'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(X(A.x), Y(A.y)); ctx.lineTo(X(B.x), Y(B.y)); ctx.stroke();
+  }
+  dot(A, '#13324f', `Last radar contact ${pt(A)}`);
+  dot(B, '#13324f', `Beacon cut-out ${pt(B)}`);
+
+  // helicopter
+  if (heli) {
+    const p = heliPosition(now);
+    ctx.strokeStyle = 'rgba(19,50,79,0.55)'; ctx.setLineDash([4, 4]); ctx.lineWidth = 1.5; ctx.beginPath();
+    ctx.moveTo(X(heli.path[0].x), Y(heli.path[0].y));
+    for (let i = 1; i <= p.i; i++) ctx.lineTo(X(heli.path[i].x), Y(heli.path[i].y));
+    ctx.lineTo(X(p.x), Y(p.y)); ctx.stroke(); ctx.setLineDash([]);
+    drawHeli(X(p.x), Y(p.y), now);
+    if (p.f >= 1 && !revealed) finishSearch();
+  }
+  // ejection point
+  if (revealed) {
+    const bob = Math.sin(t * 3) * 2;
+    ctx.fillStyle = '#facc15'; ctx.strokeStyle = '#a16207'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.ellipse(X(E.x), Y(E.y) + bob, 9, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#7c2d12'; ctx.beginPath(); ctx.arc(X(E.x), Y(E.y) - 4 + bob, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.font = '700 12px sans-serif'; ctx.fillStyle = '#7c2d12'; ctx.textAlign = 'left';
+    ctx.fillText(`Ejection ${pt(E)}`, X(E.x) + 12, Y(E.y) - 8);
+  }
+  // draggable center marker
+  if (stage >= 2) {
+    const cx = X(center.x), cy = Y(center.y);
+    ctx.strokeStyle = '#e8871e'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(cx - 10, cy); ctx.lineTo(cx + 10, cy); ctx.moveTo(cx, cy - 10); ctx.lineTo(cx, cy + 10); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, stage === 2 ? 9 : 6, 0, Math.PI * 2); ctx.fillStyle = '#e8871e'; ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.font = '700 12px sans-serif'; ctx.fillStyle = '#9a4f00'; ctx.textAlign = 'left';
+    ctx.textAlign = 'right';
+    ctx.fillText(`center ${pt(center)}`, cx - 12, cy - 12);
+  }
+  requestAnimationFrame(draw);
+}
+function dot(p, color, label) {
+  ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), 6, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.font = '600 12px sans-serif'; ctx.fillStyle = color;
+  const right = X(p.x) < cssW / 2;
+  ctx.textAlign = right ? 'left' : 'right';
+  ctx.fillText(label, X(p.x) + (right ? 10 : -10), Y(p.y) + (p.y >= Math.max(A.y, B.y) ? -10 : 18));
+}
+function drawHeli(x, y, now) {
+  ctx.save(); ctx.translate(x, y);
+  ctx.fillStyle = '#374151'; ctx.beginPath(); ctx.ellipse(0, 0, 9, 5, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillRect(-18, -1.5, 10, 3);
+  ctx.rotate(now / 40); ctx.strokeStyle = '#111827'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(14, 0); ctx.moveTo(0, -14); ctx.lineTo(0, 14); ctx.stroke();
+  ctx.restore();
+}
+
+// dragging the center (pointer events cover mouse, pen, and touch)
+let dragging = false;
+canvas.addEventListener('pointerdown', e => {
+  if (stage !== 2) return;
+  const rect = canvas.getBoundingClientRect();
+  const w = toWorld(e.clientX - rect.left, e.clientY - rect.top);
+  center = { x:snap(w.x), y:snap(w.y) }; syncCenterInputs();
+  dragging = true; canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  const rect = canvas.getBoundingClientRect();
+  const w = toWorld(e.clientX - rect.left, e.clientY - rect.top);
+  center = { x:snap(w.x), y:snap(w.y) }; syncCenterInputs();
+});
+['pointerup','pointercancel'].forEach(ev => canvas.addEventListener(ev, () => { dragging = false; }));
+window.addEventListener('resize', resize);
+
+loadMission(0);
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

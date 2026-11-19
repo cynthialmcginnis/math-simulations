@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build Your Own Quadratic Story</title>
+<style>
+  @media print {
+    .no-print { display: none !important; }
+    .main-header, .section-header {
+      background-color: #ffffff !important;
+      color: #1a3c5e !important;
+      border: 2px solid #1a3c5e !important;
+    }
+    svg { border: 1px solid #999999 !important; }
+    body { padding: 0 !important; }
+  }
+</style>
+</head>
+<body style="font-family: Arial, Helvetica, sans-serif; max-width: 950px; margin: 0 auto; color: #222222; padding: 10px;">
+
+  <div class="main-header" style="background-color: #1a3c5e; color: #ffffff; padding: 16px 20px; border-radius: 6px 6px 0 0;">
+    <h1 style="margin: 0; font-size: 22px;">Build Your Own Quadratic Story</h1>
+    <p style="margin: 4px 0 0 0; font-size: 14px; color: #d6e6f2;">Pick a genre, name your character, and get your own personalized version of this activity.</p>
+  </div>
+
+  <div class="no-print" style="border: 1px solid #cccccc; padding: 14px 18px; margin-top: 12px; font-size: 14px;">
+    <label style="display: block; margin-bottom: 8px;">
+      <strong>Your First Name:</strong><br>
+      <input id="studentName" type="text" style="width: 100%; max-width: 300px; padding: 6px; margin-top: 4px;">
+    </label>
+    <label style="display: block; margin-bottom: 8px;">
+      <strong>Character Name:</strong><br>
+      <input id="characterName" type="text" style="width: 100%; max-width: 300px; padding: 6px; margin-top: 4px;" placeholder="e.g., Captain Reyes, Spark the Wizard...">
+    </label>
+    <label style="display: block; margin-bottom: 12px;">
+      <strong>Choose a Genre:</strong><br>
+      <select id="genreSelect" style="width: 100%; max-width: 300px; padding: 6px; margin-top: 4px;">
+        <option value="fantasy">Fantasy / Castle Siege</option>
+        <option value="space">Sci-Fi / Space Battle</option>
+        <option value="sports">Sports</option>
+        <option value="pirate">Pirates</option>
+        <option value="carnival">Carnival Game</option>
+        <option value="desert">Desert Chase</option>
+      </select>
+    </label>
+    <button onclick="generate()" style="background-color: #1a6fa3; color: #ffffff; border: none; padding: 10px 18px; font-size: 14px; border-radius: 4px; cursor: pointer;">Generate My Story</button>
+  </div>
+
+  <div id="output" style="display: none; margin-top: 16px;">
+
+    <div class="no-print" style="margin-bottom: 12px;">
+      <button onclick="window.print()" style="background-color: #f0c040; color: #1a3c5e; border: none; padding: 10px 18px; font-size: 14px; border-radius: 4px; cursor: pointer;">Print This Worksheet</button>
+      <span style="font-size: 13px; color: #555555; margin-left: 8px;">(Make sure your name and version code are visible before you submit your printed pages.)</span>
+    </div>
+
+    <p style="font-size: 14px; margin: 0 0 10px 0;"><strong>Name:</strong> _______________________________________________</p>
+
+    <div class="section-header" style="background-color: #1a6fa3; color: #ffffff; padding: 8px 14px; font-weight: bold; font-size: 16px;">
+      Your Story <span id="versionCode" style="font-weight: normal; font-size: 13px;"></span>
+    </div>
+    <div style="border: 1px solid #cccccc; padding: 14px 18px; font-size: 14px;">
+      <p id="storyIntro" style="margin: 0;"></p>
+    </div>
+
+    <!-- PART A -->
+    <div class="section-header" style="background-color: #1a6fa3; color: #ffffff; padding: 8px 14px; font-weight: bold; font-size: 16px; margin-top: 16px;">
+      Part A: You Have the Equation
+    </div>
+    <div style="border: 1px solid #cccccc; padding: 14px 18px; font-size: 14px;">
+      <p style="margin-top: 0;">The path of the <span id="partAProjectile"></span> is modeled by:</p>
+      <p style="text-align: center; font-size: 16px; font-weight: bold;"><span id="partAEquation"></span></p>
+      <p id="partATarget"></p>
+      <svg id="graphA" width="100%" height="320" style="max-width: 500px; display: block; margin: 10px auto; border: 1px solid #cccccc;"></svg>
+      <p style="margin-bottom: 0;"><strong>Question:</strong> On the grid above, graph h(x) for x from 0 to <span id="partAL"></span>. Plot the target point. Then evaluate h(<span id="partAX"></span>) and plot the point (<span id="partAX2"></span>, h(<span id="partAX3"></span>)). Does <span id="partAChar"></span> hit the target? Explain.</p>
+    </div>
+
+    <!-- PART B -->
+    <div class="section-header" style="background-color: #1a6fa3; color: #ffffff; padding: 8px 14px; font-weight: bold; font-size: 16px; margin-top: 16px;">
+      Part B: Fix the Shot
+    </div>
+    <div style="border: 1px solid #cccccc; padding: 14px 18px; font-size: 14px;">
+      <p style="margin-top: 0;">The target from Part A hasn't moved. Open the <a href="quadratic-explorer.html" target="_blank" rel="noopener"><strong>Interactive Quadratic Explorer</strong></a>. Start it at a = <span id="partBa"></span>, b = <span id="partBb"></span>, c = 0 (Part A's equation), then change a, b, and/or c until the curve passes through the target point at (<span id="partBX"></span>, <span id="partBY"></span>).</p>
+      <svg id="graphB" width="100%" height="320" style="max-width: 500px; display: block; margin: 10px auto; border: 1px solid #cccccc;"></svg>
+      <p style="margin-bottom: 0;"><strong>Question:</strong> What values of a, b, and c did you find? Sketch your new curve on the grid above, along with the target point. (There's more than one correct answer — any a, b, c that makes h(<span id="partBX2"></span>) = <span id="partBY2"></span> works.)</p>
+    </div>
+
+    <!-- PART C -->
+    <div class="section-header" style="background-color: #1a6fa3; color: #ffffff; padding: 8px 14px; font-weight: bold; font-size: 16px; margin-top: 16px;">
+      Part C: Where Is the <span id="partCEnemyWordCap"></span>?
+    </div>
+    <div style="border: 1px solid #cccccc; padding: 14px 18px; font-size: 14px;">
+      <p style="margin-top: 0;"><span id="partCEnemy"></span> is lining up a shot from a raised platform. Measuring x as the distance from the <span id="partCEnemyWord1"></span>'s position: at x = 0 (right at the <span id="partCEnemyWord2"></span>), the shot is already <span id="partCOffset"></span> <span id="partCUnit"></span> off the ground. Its axis of symmetry is at x = <span id="partCAxis"></span> <span id="partCUnitAxis"></span>, and it reaches a maximum height of <span id="partCMaxHeight"></span> <span id="partCUnit2"></span> there.</p>
+      <p><span id="partCChar"></span> is <span id="partCPlayerPerch"></span>, <span id="partCTy"></span> <span id="partCUnit4"></span> above the ground.</p>
+      <svg id="graphC" width="100%" height="320" style="max-width: 500px; display: block; margin: 10px auto; border: 1px solid #cccccc;"></svg>
+      <p style="margin-bottom: 0;"><strong>Question:</strong> Use the axis of symmetry, the height at x = 0, and the max height to find a, b, and c, and graph h(x) on the grid above (x = distance from the <span id="partCEnemyWord3"></span>). Then find how far from <span id="partCChar2"></span> the <span id="partCEnemyWord4"></span> must be standing for the shot to be at <span id="partCChar3"></span>'s height. There are two possible distances. Find both, using the symmetry of your graph.</p>
+    </div>
+
+    <!-- PART D -->
+    <div class="section-header" style="background-color: #1a6fa3; color: #ffffff; padding: 8px 14px; font-weight: bold; font-size: 16px; margin-top: 16px;">
+      Part D: Just the <span id="partDEnemyWordCap"></span>'s Position
+    </div>
+    <div style="border: 1px solid #cccccc; padding: 14px 18px; font-size: 14px;">
+      <p style="margin-top: 0;">Use one of the distances you found in Part C. Place <span id="partDChar"></span> at x = 0. The <span id="partDEnemyWord"></span> is standing x = <span id="partDEx"></span> <span id="partDUnit"></span> away, at ground level, so h(<span id="partDEx2"></span>) = 0. That's the only thing you're told: one point, (<span id="partDEx3"></span>, 0). Not the shape, not the max height, not even which direction is "downfield."</p>
+      <svg id="graphD" width="100%" height="320" style="max-width: 500px; display: block; margin: 10px auto; border: 1px solid #cccccc;"></svg>
+      <p style="margin-bottom: 0;"><strong>Question:</strong> Find <em>an</em> equation h(x) = ax² + bx + c whose graph passes through (<span id="partDEx4"></span>, 0). Graph your equation on the grid above. (There are infinitely many correct answers — notice that your parabola does <em>not</em> need to pass through (0, 0). Why was that true for Parts A through C, and why isn't it required here?)</p>
+    </div>
+
+  </div>
+
+  <div style="background-color: #fdeee0; border-left: 4px solid #e8772e; padding: 10px 18px; margin-top: 14px; font-size: 13px;">
+    Your story is unique to your name, character, and genre. If you regenerate with the same entries, you'll get the same version back — write down your version code before you submit your work.
+  </div>
+
+<script>
+function xmur3(str) {
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i++) {
+    h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  return function() {
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    h ^= h >>> 16;
+    return h >>> 0;
+  };
+}
+
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function pick(rand, arr) {
+  return arr[Math.floor(rand() * arr.length)];
+}
+
+function formatNum(n) {
+  n = Math.round(n * 10000) / 10000;
+  return Number.isInteger(n) ? n.toString() : n.toFixed(4).replace(/\.?0+$/, "");
+}
+
+function formatNum2(n) {
+  n = Math.round(n * 100) / 100;
+  return Number.isInteger(n) ? n.toString() : n.toFixed(2).replace(/\.?0+$/, "");
+}
+
+function buildEqString(a, b, c) {
+  let eq = "";
+  if (a !== 0) {
+    const aTerm = (Math.abs(a) === 1 ? "" : formatNum(Math.abs(a)));
+    eq += (a < 0 ? "-" : "") + aTerm + "x\u00B2";
+  }
+  if (b !== 0) {
+    const bTerm = (Math.abs(b) === 1 ? "" : formatNum(Math.abs(b)));
+    eq += (eq ? (b > 0 ? " + " : " - ") : (b < 0 ? "-" : "")) + bTerm + "x";
+  }
+  if (c !== 0 || eq === "") {
+    eq += (eq ? (c > 0 ? " + " : " - ") : (c < 0 ? "-" : "")) + formatNum(Math.abs(c));
+  }
+  return eq;
+}
+
+// ---------- Blank grid helper ----------
+const NS = "http://www.w3.org/2000/svg";
+
+function niceStep(range) {
+  const candidates = [1, 2, 5, 10, 20, 25, 50, 100, 200, 500, 1000];
+  for (const c of candidates) {
+    if (range / c <= 10) return c;
+  }
+  return candidates[candidates.length - 1];
+}
+
+function buildGrid(svg, xMin, xMax, yMin, yMax, W, H) {
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+
+  const xRange = xMax - xMin, yRange = yMax - yMin;
+  const pxX = x => (x - xMin) / xRange * W;
+  const pxY = y => H - (y - yMin) / yRange * H;
+
+  const bg = document.createElementNS(NS, "rect");
+  bg.setAttribute("x", 0); bg.setAttribute("y", 0);
+  bg.setAttribute("width", W); bg.setAttribute("height", H);
+  bg.setAttribute("fill", "#ffffff");
+  svg.appendChild(bg);
+
+  const xStep = niceStep(xRange), yStep = niceStep(yRange);
+
+  for (let gx = Math.ceil(xMin / xStep) * xStep; gx <= xMax + 1e-9; gx += xStep) {
+    const isAxis = Math.abs(gx) < 1e-9;
+    const line = document.createElementNS(NS, "line");
+    line.setAttribute("x1", pxX(gx)); line.setAttribute("x2", pxX(gx));
+    line.setAttribute("y1", 0); line.setAttribute("y2", H);
+    line.setAttribute("stroke", isAxis ? "#1a3c5e" : "#e0e0e0");
+    line.setAttribute("stroke-width", isAxis ? "2" : "1");
+    svg.appendChild(line);
+
+    const t = document.createElementNS(NS, "text");
+    t.setAttribute("x", pxX(gx) + 2);
+    t.setAttribute("y", (yMin <= 0 && 0 <= yMax) ? pxY(0) + 12 : H - 4);
+    t.setAttribute("font-size", "10"); t.setAttribute("fill", "#666666");
+    t.textContent = formatNum(gx);
+    svg.appendChild(t);
+  }
+
+  for (let gy = Math.ceil(yMin / yStep) * yStep; gy <= yMax + 1e-9; gy += yStep) {
+    const isAxis = Math.abs(gy) < 1e-9;
+    const line = document.createElementNS(NS, "line");
+    line.setAttribute("x1", 0); line.setAttribute("x2", W);
+    line.setAttribute("y1", pxY(gy)); line.setAttribute("y2", pxY(gy));
+    line.setAttribute("stroke", isAxis ? "#1a3c5e" : "#e0e0e0");
+    line.setAttribute("stroke-width", isAxis ? "2" : "1");
+    svg.appendChild(line);
+
+    if (!isAxis) {
+      const t = document.createElementNS(NS, "text");
+      t.setAttribute("x", 2); t.setAttribute("y", pxY(gy) - 2);
+      t.setAttribute("font-size", "10"); t.setAttribute("fill", "#666666");
+      t.textContent = formatNum(gy);
+      svg.appendChild(t);
+    }
+  }
+
+  const border = document.createElementNS(NS, "rect");
+  border.setAttribute("x", 0); border.setAttribute("y", 0);
+  border.setAttribute("width", W); border.setAttribute("height", H);
+  border.setAttribute("fill", "none"); border.setAttribute("stroke", "#999999");
+  svg.appendChild(border);
+}
+
+// ---------- Genre data ----------
+const genres = {
+  fantasy: {
+    unit: "feet", launcher: "catapult", projectile: "boulder",
+    intro: c => `${c} commands the catapult crew during a siege on a stone fortress. The catapult launches a boulder toward the enemy wall.`,
+    targetNoun: "an enemy guard", perch: "standing on the battlements",
+    enemyNoun: "An enemy archer", enemyWord: "enemy", playerPerch: "standing on the castle wall"
+  },
+  space: {
+    unit: "meters", launcher: "plasma cannon", projectile: "plasma orb",
+    intro: c => `${c} fires the ship's plasma cannon during a skirmish near an asteroid field. The plasma orb arcs through the ship's artificial gravity field.`,
+    targetNoun: "an enemy drone", perch: "hovering in formation",
+    enemyNoun: "An enemy fighter", enemyWord: "enemy", playerPerch: "stationed on a platform outside the ship"
+  },
+  sports: {
+    unit: "feet", launcher: "kicking tee", projectile: "football",
+    intro: c => `${c} lines up for a long field goal attempt. The football leaves the tee and arcs downfield toward the goalposts.`,
+    targetNoun: "the goalpost crossbar", perch: "mounted on the goalpost",
+    enemyNoun: "The opposing kicker", enemyWord: "opponent", playerPerch: "standing in the stands"
+  },
+  pirate: {
+    unit: "feet", launcher: "ship's cannon", projectile: "cannonball",
+    intro: c => `${c} loads the ship's cannon and takes aim at a rival pirate vessel across the water.`,
+    targetNoun: "the rival ship's flag", perch: "flying from the mast",
+    enemyNoun: "A rival pirate gunner", enemyWord: "enemy", playerPerch: "standing on the ship's deck"
+  },
+  carnival: {
+    unit: "feet", launcher: "giant slingshot", projectile: "water balloon",
+    intro: c => `${c} steps up to the carnival slingshot booth, takes aim, and launches a water balloon toward the prize stand.`,
+    targetNoun: "the prize bell", perch: "mounted on a pole",
+    enemyNoun: "A rival player", enemyWord: "opponent", playerPerch: "standing on the carnival platform"
+  },
+  desert: {
+    unit: "feet", launcher: "slingshot", projectile: "boulder",
+    intro: c => `${c} has rigged up a giant slingshot in the desert, aiming a boulder at a fast-moving critter darting between the rocks.`,
+    targetNoun: "the critter", perch: "perched on a rock ledge",
+    enemyNoun: "The coyote", enemyWord: "coyote", playerPerch: "perched on a rock ledge"
+  }
+};
+
+// (a, b) pairs (c = 0).
+const pairs = [
+  {a:-0.05, b:2}, {a:-0.1, b:4}, {a:-0.15, b:6}, {a:-0.048, b:2.4},
+  {a:-0.08, b:4}, {a:-0.0333, b:2}, {a:-0.05, b:3}, {a:-0.0667, b:4},
+  {a:-0.0833, b:5}, {a:-0.0286, b:2}, {a:-0.04, b:2.8}, {a:-0.025, b:2},
+  {a:-0.05, b:4}, {a:-0.0222, b:2}, {a:-0.02, b:2}, {a:-0.03, b:3},
+  {a:-0.0167, b:2}, {a:-0.025, b:3}
+];
+
+function generate() {
+  const studentName = document.getElementById("studentName").value.trim() || "Student";
+  const character = document.getElementById("characterName").value.trim() || "The Hero";
+  const genreKey = document.getElementById("genreSelect").value;
+  const genre = genres[genreKey];
+
+  const seedStr = studentName.toLowerCase() + "|" + character.toLowerCase() + "|" + genreKey;
+  const rand = mulberry32(xmur3(seedStr)());
+
+  // ----- Part A -----
+  const idxA = Math.floor(rand() * pairs.length);
+  const pA = pairs[idxA];
+  const a = pA.a, b = pA.b;
+  const L = Math.round(-b / a);
+  const vx = -b / (2 * a);
+  const vy = a * vx * vx + b * vx;
+
+  const candidatesA = [];
+  for (let m = 5; m < L; m += 5) {
+    if (m >= L * 0.1 && m <= L * 0.9) candidatesA.push(m);
+  }
+  const x1 = pick(rand, candidatesA);
+  const trueH1 = a * x1 * x1 + b * x1;
+
+  const missDelta = pick(rand, [10, 15, 20, 25]);
+  const y1 = Math.round(trueH1 + missDelta);
+
+  // ----- Part C -----
+  const idxC = (idxA + 1 + Math.floor(rand() * (pairs.length - 1))) % pairs.length;
+  const pC = pairs[idxC];
+  const ac = pC.a, bc = pC.b;
+  const Lc = Math.round(-bc / ac);
+  const vxc = -bc / (2 * ac);
+  const vyc = ac * vxc * vxc + bc * vxc;
+
+  const candidatesC = [];
+  for (let m = 5; m < Lc; m += 5) {
+    if (m >= Lc * 0.1 && m <= Lc * 0.9) candidatesC.push(m);
+  }
+  const uPick = pick(rand, candidatesC);
+  const cOffsetC = pick(rand, [5, 10, 15, 20]);
+  const baseVal = ac * uPick * (uPick - Lc);
+  const TyNum = baseVal + cOffsetC;
+  const uOther = Lc - uPick;
+
+  // ----- Part D -----
+  const Ex = uPick;
+  const adOptions = [-0.02, -0.03, -0.05, -0.08];
+  const ad = pick(rand, adOptions);
+  const landingExtra = pick(rand, [30, 40, 50, 60]);
+  const r = -landingExtra;
+  const Bd = -ad * (Ex + r);
+  const Cd = ad * Ex * r;
+  const vertexYd = -ad * (r - Ex) * (r - Ex) / 4;
+
+  // --- Render text ---
+  document.getElementById("output").style.display = "block";
+  document.getElementById("versionCode").textContent =
+    "(Version: " + seedStr.split("|").map(s => s.slice(0,3)).join("-").toUpperCase() + ")";
+
+  document.getElementById("storyIntro").textContent = genre.intro(character);
+
+  // Part A
+  document.getElementById("partAProjectile").textContent = genre.projectile;
+  document.getElementById("partAEquation").textContent = "h(x) = " + buildEqString(a, b, 0);
+  document.getElementById("partAChar").textContent = character;
+  document.getElementById("partAL").textContent = L;
+  document.getElementById("partAX").textContent = x1;
+  document.getElementById("partAX2").textContent = x1;
+  document.getElementById("partAX3").textContent = x1;
+  const targetDescA = `${genre.targetNoun} is ${genre.perch}, ${x1} ${genre.unit} from the ${genre.launcher}, at a height of ${y1} ${genre.unit}`;
+  document.getElementById("partATarget").textContent = targetDescA.charAt(0).toUpperCase() + targetDescA.slice(1) + ".";
+
+  // Part B
+  document.getElementById("partBa").textContent = formatNum(a);
+  document.getElementById("partBb").textContent = formatNum(b);
+  document.getElementById("partBX").textContent = x1;
+  document.getElementById("partBY").textContent = y1;
+  document.getElementById("partBX2").textContent = x1;
+  document.getElementById("partBY2").textContent = y1;
+
+  // Part C
+  document.getElementById("partCEnemy").textContent = genre.enemyNoun;
+  const enemyWordCap = genre.enemyWord.charAt(0).toUpperCase() + genre.enemyWord.slice(1);
+  document.getElementById("partCEnemyWordCap").textContent = enemyWordCap;
+  document.getElementById("partCEnemyWord1").textContent = genre.enemyWord;
+  document.getElementById("partCEnemyWord2").textContent = genre.enemyWord;
+  document.getElementById("partCEnemyWord3").textContent = genre.enemyWord;
+  document.getElementById("partCEnemyWord4").textContent = genre.enemyWord;
+  document.getElementById("partCUnit").textContent = genre.unit;
+  document.getElementById("partCUnit2").textContent = genre.unit;
+  document.getElementById("partCUnit4").textContent = genre.unit;
+  document.getElementById("partCUnitAxis").textContent = genre.unit;
+  document.getElementById("partCOffset").textContent = cOffsetC;
+  document.getElementById("partCAxis").textContent = formatNum(Lc / 2);
+  document.getElementById("partCMaxHeight").textContent = formatNum(vyc + cOffsetC);
+  document.getElementById("partCChar").textContent = character;
+  document.getElementById("partCChar2").textContent = character;
+  document.getElementById("partCChar3").textContent = character;
+  document.getElementById("partCPlayerPerch").textContent = genre.playerPerch;
+  document.getElementById("partCTy").textContent = formatNum2(TyNum);
+
+  // Part D
+  document.getElementById("partDEnemyWordCap").textContent = enemyWordCap;
+  document.getElementById("partDEnemyWord").textContent = genre.enemyWord;
+  document.getElementById("partDChar").textContent = character;
+  document.getElementById("partDUnit").textContent = genre.unit;
+  document.getElementById("partDEx").textContent = formatNum(Ex);
+  document.getElementById("partDEx2").textContent = formatNum(Ex);
+  document.getElementById("partDEx3").textContent = formatNum(Ex);
+  document.getElementById("partDEx4").textContent = formatNum(Ex);
+
+  // --- Blank grids ---
+  // Part A: x in [0, L], y in [0, max(vy, y1)]
+  {
+    const xHi = L, yHi = Math.max(vy, y1);
+    const mX = Math.max(2, xHi * 0.08), mY = Math.max(2, yHi * 0.1);
+    buildGrid(document.getElementById("graphA"), -mX, xHi + mX, -mY, yHi + mY, 500, 320);
+  }
+
+  // Part B: same scale as A (so students can compare)
+  {
+    const xHi = L, yHi = Math.max(vy, y1);
+    const mX = Math.max(2, xHi * 0.08), mY = Math.max(2, yHi * 0.1);
+    buildGrid(document.getElementById("graphB"), -mX, xHi + mX, -mY, yHi + mY, 500, 320);
+  }
+
+  // Part C: x in [0, Lc] (distance from the enemy), y in [0, vyc + cOffsetC]
+  {
+    const xHi = Lc, yHi = vyc + cOffsetC;
+    const mX = Math.max(2, xHi * 0.08), mY = Math.max(2, yHi * 0.1);
+    buildGrid(document.getElementById("graphC"), -mX, xHi + mX, -mY, yHi + mY, 500, 320);
+  }
+
+  // Part D: x in [r, Ex] (r is negative, Ex positive — h(0) lands between them, positive)
+  {
+    const xLo = r, xHi = Ex;
+    const yLo = 0, yHi = vertexYd;
+    const mX = Math.max(2, (xHi - xLo) * 0.08), mY = Math.max(2, (yHi - yLo) * 0.1);
+    buildGrid(document.getElementById("graphD"), xLo - mX, xHi + mX, yLo - mY, yHi + mY, 500, 320);
+  }
+}
+</script>
+
+</body>
+</html>

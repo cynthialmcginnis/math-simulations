@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modulus as Distance</title>
+<style>
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f4f6f8;
+    padding: 24px;
+    color: #1a1a1a;
+  }
+  .container {
+    max-width: 880px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  h2 { margin-top: 0; color: #1a3c5e; }
+  @media (max-width: 600px) { body { padding: 8px; } .container { padding: 14px; } .level-tab { padding: 8px 10px; font-size: 14px; } }
+
+  .level-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+    border-bottom: 2px solid #EAF2F8;
+  }
+  .level-tab {
+    background: none;
+    border: none;
+    padding: 10px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+  }
+  .level-tab.active { color: #1a3c5e; border-bottom-color: #1a6fa3; }
+  .level-tab:hover { color: #1a6fa3; background: none; }
+
+  .controls {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .control-group { flex: 1; min-width: 220px; }
+  .control-group label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .complex-input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .complex-input-row span { font-weight: 600; color: #4a5a68; }
+  input[type="number"] {
+    width: 80px;
+    padding: 8px 9px;
+    font-size: 15px;
+    border: 1px solid #c9d6e0;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-family: inherit;
+  }
+
+  .btn-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 10px 0 18px;
+    flex-wrap: wrap;
+  }
+  button {
+    background: #1a6fa3;
+    color: white;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { background: #14587f; }
+  button.secondary { background: #e5e7eb; color: #1a1a1a; }
+  button.secondary:hover { background: #d1d5db; }
+
+  .equation {
+    font-size: 17px;
+    font-weight: 700;
+    background: #EAF2F8;
+    color: #1a3c5e;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .buildup {
+    font-size: 14px;
+    background: #fff8e6;
+    border: 1px solid #F0C040;
+    color: #5c4400;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    line-height: 1.9;
+  }
+  .buildup .step-label { color: #1a3c5e; }
+
+  .canvas-wrap {
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #d0d7de;
+    overflow: hidden;
+    max-width: 620px;
+    margin: 0 auto;
+  }
+  canvas {
+    width: 100%;
+    display: block;
+    cursor: grab;
+  }
+
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Modulus as Distance</h2>
+
+  <div class="level-tabs">
+    <button class="level-tab active" id="tab1Btn" type="button">Distance from Origin</button>
+    <button class="level-tab" id="tab2Btn" type="button">Distance Between Two Points</button>
+  </div>
+
+  <div id="panel1">
+    <div class="controls">
+      <div class="control-group">
+        <label style="color:#16a34a;">z = a + bi: drag the point or type values</label>
+        <div class="complex-input-row">
+          <input type="number" id="zre" value="4" step="0.5">
+          <span>+</span>
+          <input type="number" id="zim" value="3" step="0.5">
+          <span>i</span>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="secondary" id="preset345Btn" type="button">3&ndash;4&ndash;5 triangle</button>
+      <button class="secondary" id="preset51213Btn" type="button">5&ndash;12&ndash;13 triangle</button>
+      <button class="secondary" id="random1Btn" type="button">Randomize</button>
+    </div>
+  </div>
+
+  <div id="panel2" style="display:none;">
+    <div class="controls">
+      <div class="control-group">
+        <label style="color:#1a6fa3;">z&#8321; (blue)</label>
+        <div class="complex-input-row">
+          <input type="number" id="p1re" value="5" step="0.5">
+          <span>+</span>
+          <input type="number" id="p1im" value="4" step="0.5">
+          <span>i</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <label style="color:#c0392b;">z&#8322; (red)</label>
+        <div class="complex-input-row">
+          <input type="number" id="p2re" value="-2" step="0.5">
+          <span>+</span>
+          <input type="number" id="p2im" value="-1" step="0.5">
+          <span>i</span>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="secondary" id="swapBtn" type="button">Swap z&#8321; &harr; z&#8322;</button>
+      <button class="secondary" id="random2Btn" type="button">Randomize</button>
+    </div>
+  </div>
+
+  <div class="equation" id="resultEq"></div>
+  <div class="buildup" id="buildupPanel"></div>
+
+  <div class="canvas-wrap">
+    <canvas id="canvas" width="680" height="680"></canvas>
+  </div>
+
+  <div class="legend" id="legend"></div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+const tab1Btn = document.getElementById('tab1Btn');
+const tab2Btn = document.getElementById('tab2Btn');
+const panel1 = document.getElementById('panel1');
+const panel2 = document.getElementById('panel2');
+const resultEq = document.getElementById('resultEq');
+const buildupPanel = document.getElementById('buildupPanel');
+const legendEl = document.getElementById('legend');
+
+const zreInput = document.getElementById('zre');
+const zimInput = document.getElementById('zim');
+const p1reInput = document.getElementById('p1re');
+const p1imInput = document.getElementById('p1im');
+const p2reInput = document.getElementById('p2re');
+const p2imInput = document.getElementById('p2im');
+
+const W = canvas.width, H = canvas.height;
+const MARGIN = { left: 50, right: 30, top: 30, bottom: 50 };
+const plotW = W - MARGIN.left - MARGIN.right;
+const plotH = H - MARGIN.top - MARGIN.bottom;
+const centerXpx = MARGIN.left + plotW / 2;
+const centerYpx = MARGIN.top + plotH / 2;
+
+let activeTab = 1;
+let z = { re: 4, im: 3 };
+let p1 = { re: 5, im: 4 };
+let p2 = { re: -2, im: -1 };
+let dragging = null;
+let frozenView = null;
+
+// Scale text and touch targets up when the canvas is shown small (phones)
+function k() { return Math.max(1, (W / (canvas.clientWidth || W)) * 0.8); }
+function font(weight, n) { return `${weight ? weight + ' ' : ''}${Math.round(n * k())}px sans-serif`; }
+
+// ---------- Math helpers ----------
+function magnitude(pt) { return Math.sqrt(pt.re * pt.re + pt.im * pt.im); }
+function niceStep(maxValue, targetTicks) {
+  const rough = maxValue / targetTicks;
+  const mag = Math.pow(10, Math.floor(Math.log10(rough || 1)));
+  const norm = rough / mag;
+  let step;
+  if (norm < 1.5) step = 1;
+  else if (norm < 3) step = 2;
+  else if (norm < 7) step = 5;
+  else step = 10;
+  return step * mag;
+}
+function formatNum(n) {
+  return Math.abs(n - Math.round(n)) < 0.01 ? Math.round(n).toString() : n.toFixed(1);
+}
+function sq(n) { return n < 0 ? `(${formatNum(n)})` : formatNum(n); }
+function formatComplex(pt) {
+  const rePart = formatNum(pt.re);
+  const imAbs = formatNum(Math.abs(pt.im));
+  return `${rePart} ${pt.im < 0 ? '-' : '+'} ${imAbs}i`;
+}
+
+// ---------- View ----------
+function computeView() {
+  if (frozenView) return frozenView;
+  let maxAbs;
+  if (activeTab === 1) {
+    maxAbs = Math.max(2, Math.abs(z.re), Math.abs(z.im), magnitude(z));
+  } else {
+    const d = { re: p1.re - p2.re, im: p1.im - p2.im };
+    maxAbs = Math.max(2, Math.abs(p1.re), Math.abs(p1.im), Math.abs(p2.re), Math.abs(p2.im), magnitude(d));
+  }
+  const range = maxAbs * 1.35;
+  const scale = Math.min(plotW, plotH) / (2 * range);
+  const step = niceStep(range, 6);
+  return { range, scale, step };
+}
+
+function pxX(re, view) { return centerXpx + re * view.scale; }
+function pxY(im, view) { return centerYpx - im * view.scale; }
+
+// ---------- Drawing ----------
+function drawGrid(view) {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#fbfcfd';
+  ctx.fillRect(0, 0, W, H);
+
+  const start = -Math.floor(view.range / view.step) * view.step;
+  for (let g = start; g <= view.range; g += view.step) {
+    const isAxis = Math.abs(g) < 1e-6;
+    const px = pxX(g, view);
+    const py = pxY(g, view);
+
+    ctx.strokeStyle = isAxis ? '#1a3c5e' : '#e2e8ef';
+    ctx.lineWidth = isAxis ? 2 : 1;
+
+    ctx.beginPath();
+    ctx.moveTo(px, MARGIN.top);
+    ctx.lineTo(px, H - MARGIN.bottom);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(MARGIN.left, py);
+    ctx.lineTo(W - MARGIN.right, py);
+    ctx.stroke();
+
+    if (!isAxis) {
+      ctx.fillStyle = '#8a97a3';
+      ctx.font = font('', 10);
+      ctx.textAlign = 'center';
+      ctx.fillText(formatNum(g), px, centerYpx + 14 * k());
+      ctx.textAlign = 'right';
+      ctx.fillText(formatNum(g), centerXpx - 6, py + 3);
+    }
+  }
+
+  ctx.strokeStyle = '#8a97a3';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(MARGIN.left, MARGIN.top, plotW, plotH);
+
+  ctx.fillStyle = '#1a3c5e';
+  ctx.font = font('600', 13);
+  ctx.textAlign = 'left';
+  ctx.fillText('Re', W - MARGIN.right + 6, centerYpx + 4);
+  ctx.fillText('Im', centerXpx + 6, MARGIN.top - 8);
+}
+
+function drawPoint(view, pt, color, label, dx, dy) {
+  const px = pxX(pt.re, view), py = pxY(pt.im, view);
+  ctx.beginPath();
+  ctx.arc(px, py, 5 * k(), 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.fillStyle = color;
+  ctx.font = font('600', 12);
+  ctx.textAlign = (dx || 8) < 0 ? 'right' : 'left';
+  ctx.fillText(label, px + (dx === undefined ? 8 : dx), py + (dy === undefined ? -8 : dy));
+}
+
+function drawRightAngleMarker(view, corner, toward1, toward2) {
+  const cx = pxX(corner.re, view), cy = pxY(corner.im, view);
+  const p1x = pxX(toward1.re, view), p1y = pxY(toward1.im, view);
+  const p2x = pxX(toward2.re, view), p2y = pxY(toward2.im, view);
+  const size = 11;
+  const ux = p1x - cx, uy = p1y - cy, ulen = Math.hypot(ux, uy) || 1;
+  const vx = p2x - cx, vy = p2y - cy, vlen = Math.hypot(vx, vy) || 1;
+  const nx1 = (ux / ulen) * size, ny1 = (uy / ulen) * size;
+  const nx2 = (vx / vlen) * size, ny2 = (vy / vlen) * size;
+  ctx.strokeStyle = '#6b7280';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx + nx1, cy + ny1);
+  ctx.lineTo(cx + nx1 + nx2, cy + ny1 + ny2);
+  ctx.lineTo(cx + nx2, cy + ny2);
+  ctx.stroke();
+}
+
+function labelSegment(view, from, to, text, color, side) {
+  const fx = pxX(from.re, view), fy = pxY(from.im, view);
+  const tx = pxX(to.re, view), ty = pxY(to.im, view);
+  const mx = (fx + tx) / 2, my = (fy + ty) / 2;
+  const dx = tx - fx, dy = ty - fy;
+  const len = Math.hypot(dx, dy) || 1;
+  const sign = side || 1;
+  const offX = (-dy / len) * 16 * k() * sign, offY = (dx / len) * 16 * k() * sign;
+  ctx.fillStyle = color;
+  ctx.font = font('600', 13);
+  ctx.textAlign = 'center';
+  ctx.fillText(text, mx + offX, my + offY);
+}
+
+function drawTriangle(view, origin, corner, point, legColor1, legColor2, hypColor) {
+  const o = { px: pxX(origin.re, view), py: pxY(origin.im, view) };
+  const c = { px: pxX(corner.re, view), py: pxY(corner.im, view) };
+  const p = { px: pxX(point.re, view), py: pxY(point.im, view) };
+
+  ctx.strokeStyle = legColor1;
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(o.px, o.py); ctx.lineTo(c.px, c.py); ctx.stroke();
+
+  ctx.strokeStyle = legColor2;
+  ctx.beginPath(); ctx.moveTo(c.px, c.py); ctx.lineTo(p.px, p.py); ctx.stroke();
+
+  ctx.strokeStyle = hypColor;
+  ctx.lineWidth = 3.5;
+  ctx.beginPath(); ctx.moveTo(o.px, o.py); ctx.lineTo(p.px, p.py); ctx.stroke();
+
+  drawRightAngleMarker(view, corner, origin, point);
+}
+
+function drawTab1Scene(view) {
+  drawGrid(view);
+  const origin = { re: 0, im: 0 };
+  const corner = { re: z.re, im: 0 };
+  const side = z.im >= 0 ? 1 : -1;
+
+  drawTriangle(view, origin, corner, z, '#1a6fa3', '#c98a00', '#16a34a');
+  labelSegment(view, origin, corner, `|a| = ${formatNum(Math.abs(z.re))}`, '#1a6fa3', side < 0 ? -1 : 1);
+  labelSegment(view, corner, z, `|b| = ${formatNum(Math.abs(z.im))}`, '#c98a00', z.re >= 0 ? 1 : -1);
+  labelSegment(view, origin, z, `|z| = ${formatNum(magnitude(z))}`, '#16a34a', z.re * z.im >= 0 ? -1 : 1);
+
+  drawPoint(view, z, '#16a34a', `z = ${formatComplex(z)}`);
+}
+
+function drawTab2Scene(view) {
+  drawGrid(view);
+  const corner = { re: p1.re, im: p2.im };
+  const d = { re: p1.re - p2.re, im: p1.im - p2.im };
+
+  drawTriangle(view, p2, corner, p1, '#c0392b', '#c98a00', '#16a34a');
+  labelSegment(view, p2, corner, `|\u0394re| = ${formatNum(Math.abs(d.re))}`, '#c0392b', d.im >= 0 ? -1 : 1);
+  labelSegment(view, corner, p1, `|\u0394im| = ${formatNum(Math.abs(d.im))}`, '#c98a00', d.re >= 0 ? 1 : -1);
+  labelSegment(view, p2, p1, `distance = ${formatNum(magnitude(d))}`, '#16a34a', d.re * d.im >= 0 ? -1 : 1);
+
+  drawPoint(view, p1, '#1a6fa3', `z1 = ${formatComplex(p1)}`);
+  drawPoint(view, p2, '#c0392b', `z2 = ${formatComplex(p2)}`);
+}
+
+function drawScene() {
+  const view = computeView();
+  if (activeTab === 1) drawTab1Scene(view);
+  else drawTab2Scene(view);
+}
+
+// ---------- Panels ----------
+function updatePanels() {
+  if (activeTab === 1) {
+    const a = z.re, b = z.im;
+    const absA = Math.abs(a), absB = Math.abs(b);
+    const dist = magnitude(z);
+    resultEq.textContent = `|z| = |${formatComplex(z)}| = ${formatNum(dist)}`;
+    buildupPanel.innerHTML =
+      `<div><span class="step-label"><strong>Step 1</strong></span>: distance along the real axis, same as |x| on a number line: |a| = |${formatNum(a)}| = ${formatNum(absA)}</div>` +
+      `<div><span class="step-label"><strong>Step 2</strong></span>: distance along the imaginary axis: |b| = |${formatNum(b)}| = ${formatNum(absB)}</div>` +
+      `<div><span class="step-label"><strong>Step 3</strong></span>: those two distances are legs of a right triangle. Pythagorean theorem: a&sup2; + b&sup2; = c&sup2; &rarr; ${sq(a)}&sup2; + ${sq(b)}&sup2; = ${formatNum(a * a)} + ${formatNum(b * b)} = ${formatNum(a * a + b * b)}</div>` +
+      `<div><strong>c = &radic;(a&sup2;+b&sup2;) = &radic;${formatNum(a * a + b * b)} = ${formatNum(dist)} = |z|</strong></div>`;
+    legendEl.innerHTML =
+      `<span><span class="swatch" style="background:#1a6fa3;"></span> |a| (real leg)</span>` +
+      `<span><span class="swatch" style="background:#c98a00;"></span> |b| (imaginary leg)</span>` +
+      `<span><span class="swatch" style="background:#16a34a;"></span> |z| (hypotenuse)</span>`;
+  } else {
+    const d = { re: p1.re - p2.re, im: p1.im - p2.im };
+    const dist = magnitude(d);
+    resultEq.textContent = `distance(z1, z2) = |z1 - z2| = ${formatNum(dist)}`;
+    buildupPanel.innerHTML =
+      `<div><span class="step-label"><strong>Step 1</strong></span>: horizontal leg, distance between the real parts: |&Delta;re| = |${formatNum(p1.re)} &minus; (${formatNum(p2.re)})| = ${formatNum(Math.abs(d.re))}</div>` +
+      `<div><span class="step-label"><strong>Step 2</strong></span>: vertical leg, distance between the imaginary parts: |&Delta;im| = |${formatNum(p1.im)} &minus; (${formatNum(p2.im)})| = ${formatNum(Math.abs(d.im))}</div>` +
+      `<div><span class="step-label"><strong>Step 3</strong></span>: Pythagorean theorem: (&Delta;re)&sup2; + (&Delta;im)&sup2; = ${formatNum(d.re * d.re)} + ${formatNum(d.im * d.im)} = ${formatNum(d.re * d.re + d.im * d.im)}</div>` +
+      `<div><strong>distance = &radic;((&Delta;re)&sup2;+(&Delta;im)&sup2;) = ${formatNum(dist)} = |z1 &minus; z2|</strong></div>`;
+    legendEl.innerHTML =
+      `<span><span class="swatch" style="background:#1a6fa3;"></span> z1</span>` +
+      `<span><span class="swatch" style="background:#c0392b;"></span> z2</span>` +
+      `<span><span class="swatch" style="background:#16a34a;"></span> distance</span>`;
+  }
+}
+
+function refresh() {
+  updatePanels();
+  drawScene();
+}
+
+// ---------- Inputs ----------
+function syncInputs() {
+  zreInput.value = z.re; zimInput.value = z.im;
+  p1reInput.value = p1.re; p1imInput.value = p1.im;
+  p2reInput.value = p2.re; p2imInput.value = p2.im;
+}
+
+zreInput.addEventListener('input', () => { z.re = parseFloat(zreInput.value) || 0; refresh(); });
+zimInput.addEventListener('input', () => { z.im = parseFloat(zimInput.value) || 0; refresh(); });
+p1reInput.addEventListener('input', () => { p1.re = parseFloat(p1reInput.value) || 0; refresh(); });
+p1imInput.addEventListener('input', () => { p1.im = parseFloat(p1imInput.value) || 0; refresh(); });
+p2reInput.addEventListener('input', () => { p2.re = parseFloat(p2reInput.value) || 0; refresh(); });
+p2imInput.addEventListener('input', () => { p2.im = parseFloat(p2imInput.value) || 0; refresh(); });
+
+document.getElementById('preset345Btn').addEventListener('click', () => { z = { re: 4, im: 3 }; syncInputs(); refresh(); });
+document.getElementById('preset51213Btn').addEventListener('click', () => { z = { re: 12, im: 5 }; syncInputs(); refresh(); });
+document.getElementById('random1Btn').addEventListener('click', () => {
+  const rnd = () => Math.round((Math.random() * 12 - 6) * 2) / 2;
+  z = { re: rnd(), im: rnd() };
+  syncInputs(); refresh();
+});
+document.getElementById('swapBtn').addEventListener('click', () => {
+  const tmp = p1; p1 = p2; p2 = tmp;
+  syncInputs(); refresh();
+});
+document.getElementById('random2Btn').addEventListener('click', () => {
+  const rnd = () => Math.round((Math.random() * 12 - 6) * 2) / 2;
+  p1 = { re: rnd(), im: rnd() };
+  p2 = { re: rnd(), im: rnd() };
+  syncInputs(); refresh();
+});
+
+// ---------- Tab switching ----------
+function setTab(n) {
+  activeTab = n;
+  tab1Btn.classList.toggle('active', n === 1);
+  tab2Btn.classList.toggle('active', n === 2);
+  panel1.style.display = n === 1 ? '' : 'none';
+  panel2.style.display = n === 2 ? '' : 'none';
+  refresh();
+}
+tab1Btn.addEventListener('click', () => setTab(1));
+tab2Btn.addEventListener('click', () => setTab(2));
+
+// ---------- Dragging ----------
+function getCanvasPos(evt) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleXCanvas = canvas.width / rect.width;
+  const scaleYCanvas = canvas.height / rect.height;
+  const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+  const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+  return {
+    x: (clientX - rect.left) * scaleXCanvas,
+    y: (clientY - rect.top) * scaleYCanvas
+  };
+}
+
+function draggablePoints() {
+  if (activeTab === 1) return [{ key: 'z', pt: z }];
+  return [{ key: 'p1', pt: p1 }, { key: 'p2', pt: p2 }];
+}
+
+function nearestPoint(pos, view) {
+  const pts = draggablePoints();
+  const threshold = 18 * k();
+  let best = null, bestDist = Infinity;
+  for (const entry of pts) {
+    const px = pxX(entry.pt.re, view), py = pxY(entry.pt.im, view);
+    const d = Math.hypot(pos.x - px, pos.y - py);
+    if (d < threshold && d < bestDist) { best = entry.key; bestDist = d; }
+  }
+  return best;
+}
+
+function startDrag(evt) {
+  const view = computeView();
+  const pos = getCanvasPos(evt);
+  dragging = nearestPoint(pos, view);
+  if (dragging) { frozenView = view; evt.preventDefault(); }
+}
+
+function moveDrag(evt) {
+  const view = computeView();
+  const pos = getCanvasPos(evt);
+  if (!dragging) {
+    canvas.style.cursor = nearestPoint(pos, view) ? 'grab' : 'default';
+    return;
+  }
+  evt.preventDefault();
+  const re = Math.round(((pos.x - centerXpx) / view.scale) * 10) / 10;
+  const im = Math.round(((centerYpx - pos.y) / view.scale) * 10) / 10;
+  if (dragging === 'z') z = { re, im };
+  else if (dragging === 'p1') p1 = { re, im };
+  else if (dragging === 'p2') p2 = { re, im };
+  syncInputs();
+  refresh();
+}
+
+function endDrag() {
+  if (dragging) { dragging = null; frozenView = null; refresh(); }
+}
+
+canvas.addEventListener('mousedown', startDrag);
+canvas.addEventListener('mousemove', moveDrag);
+window.addEventListener('mouseup', endDrag);
+canvas.addEventListener('touchstart', startDrag, { passive: false });
+canvas.addEventListener('touchmove', moveDrag, { passive: false });
+window.addEventListener('touchend', endDrag);
+
+window.addEventListener('resize', refresh);
+
+// ---------- Init ----------
+refresh();
+</script>
+</body>
+</html>

@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ladder Geometry Simulator — College Algebra</title>
+  <link href="https://api.fontshare.com/v2/css?f[]=chillax@400,500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
+  <style>
+    :root,[data-theme="light"]{
+      --bg:#f0f4f8;--surface:#fff;--surface-2:#f8fafc;--surface-off:#e8eef5;
+      --divider:#d1dae6;--border:#c4cfdc;--text:#1a2333;--muted:#5a6a7e;--faint:#9baabb;--inv:#fff;
+      --primary:#1565c0;--primary-h:#0d47a1;--primary-lt:#e3f0fd;--primary-glow:rgba(21,101,192,.15);
+      --safe:#2e7d32;--safe-lt:#e8f5e9;--safe-glow:rgba(46,125,50,.2);
+      --danger:#c62828;--danger-lt:#ffebee;--danger-glow:rgba(198,40,40,.2);
+      --warn:#e65100;--warn-lt:#fff3e0;--warn-glow:rgba(230,81,0,.2);
+      --font-d:'Chillax','Trebuchet MS',sans-serif;--font-b:'Satoshi','Segoe UI',sans-serif;
+      --xs:clamp(.75rem,.7rem + .25vw,.875rem);--sm:clamp(.875rem,.8rem + .35vw,1rem);
+      --base:clamp(1rem,.95rem + .25vw,1.125rem);--lg:clamp(1.125rem,1rem + .75vw,1.5rem);
+      --xl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem);--2xl:clamp(2rem,1.2rem + 2.5vw,3.5rem);
+      --r-sm:.375rem;--r-md:.5rem;--r-lg:.75rem;--r-xl:1.25rem;--r-full:9999px;
+      --sh-sm:0 1px 3px rgba(26,35,51,.08);--sh-md:0 4px 16px rgba(26,35,51,.10);--sh-lg:0 12px 40px rgba(26,35,51,.14);
+      --ease:200ms cubic-bezier(.16,1,.3,1);
+    }
+    [data-theme="dark"]{
+      --bg:#0d1117;--surface:#161b22;--surface-2:#1c2330;--surface-off:#1a2233;
+      --divider:#242d3d;--border:#2d3748;--text:#e2e8f0;--muted:#8899a6;--faint:#4a5568;--inv:#0d1117;
+      --primary:#4da6ff;--primary-h:#6db8ff;--primary-lt:rgba(77,166,255,.12);--primary-glow:rgba(77,166,255,.2);
+      --safe:#4caf50;--safe-lt:rgba(76,175,80,.12);--safe-glow:rgba(76,175,80,.25);
+      --danger:#ef5350;--danger-lt:rgba(239,83,80,.12);--danger-glow:rgba(239,83,80,.25);
+      --warn:#ff9800;--warn-lt:rgba(255,152,0,.12);--warn-glow:rgba(255,152,0,.25);
+      --sh-sm:0 1px 3px rgba(0,0,0,.3);--sh-md:0 4px 16px rgba(0,0,0,.4);--sh-lg:0 12px 40px rgba(0,0,0,.5);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+    body{min-height:100dvh;font-family:var(--font-b);font-size:var(--base);color:var(--text);background:var(--bg);line-height:1.6}
+    button{cursor:pointer;font:inherit;color:inherit}
+    input{font:inherit;color:inherit}
+    svg{display:block}
+
+    /* HEADER */
+    .app-header{background:var(--surface);border-bottom:1px solid var(--divider);padding:.75rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--sh-sm)}
+    .logo-group{display:flex;align-items:center;gap:.75rem}
+    .logo-icon{width:40px;height:40px;flex-shrink:0}
+    .logo-text{font-family:var(--font-d);font-size:var(--lg);font-weight:700;letter-spacing:-.02em}
+    .logo-sub{font-size:var(--xs);color:var(--muted);font-weight:500;letter-spacing:.05em;text-transform:uppercase}
+    .header-controls{display:flex;align-items:center;gap:.75rem}
+    .tabs{display:flex;background:var(--surface-off);border:1px solid var(--border);border-radius:var(--r-full);padding:3px;gap:2px}
+    .tab-btn{background:none;border:none;padding:.375rem 1.25rem;border-radius:var(--r-full);font-size:var(--sm);font-weight:600;color:var(--muted);transition:all var(--ease);white-space:nowrap}
+    .tab-btn.active{background:var(--surface);color:var(--text);box-shadow:var(--sh-sm)}
+    .tab-btn:hover:not(.active){color:var(--text)}
+    .theme-toggle{background:var(--surface-off);border:1px solid var(--border);border-radius:var(--r-full);width:36px;height:36px;display:flex;align-items:center;justify-content:center;transition:background var(--ease)}
+    .theme-toggle:hover{background:var(--divider)}
+
+    main{max-width:1200px;margin:0 auto;padding:2rem}
+    .section{display:none}
+    .section.active{display:block}
+
+    /* HERO */
+    .hero{text-align:center;padding:2.5rem 1rem 1.5rem}
+    .hero-badge{display:inline-flex;align-items:center;gap:.5rem;background:var(--primary-lt);color:var(--primary);border-radius:var(--r-full);padding:.25rem 1rem;font-size:var(--xs);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1rem}
+    .hero h1{font-family:var(--font-d);font-size:var(--2xl);font-weight:700;letter-spacing:-.03em;line-height:1.1;margin-bottom:.75rem}
+    .hero p{font-size:var(--base);color:var(--muted);max-width:56ch;margin:0 auto 1rem}
+
+    /* MODE TOGGLE */
+    .mode-bar{display:flex;align-items:center;justify-content:center;gap:1rem;margin-bottom:2rem;flex-wrap:wrap}
+    .mode-btn{padding:.5rem 1.5rem;border-radius:var(--r-full);font-size:var(--sm);font-weight:700;border:2px solid var(--border);background:var(--surface);color:var(--muted);transition:all var(--ease)}
+    .mode-btn.active{border-color:var(--primary);color:var(--primary);background:var(--primary-lt)}
+    .mode-pill{font-size:var(--xs);font-weight:700;padding:.25rem .75rem;border-radius:var(--r-full)}
+    .pill-explore{background:var(--primary-lt);color:var(--primary)}
+    .pill-practice{background:var(--safe-lt);color:var(--safe)}
+
+    /* GRID */
+    .sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start}
+    @media(max-width:900px){.sim-grid{grid-template-columns:1fr}}
+
+    /* CARDS */
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:1.5rem;box-shadow:var(--sh-md)}
+    .card-title{font-family:var(--font-d);font-size:var(--lg);font-weight:700;margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem}
+    .card-title svg{color:var(--primary);flex-shrink:0}
+
+    /* GIVEN VALUES (practice mode) */
+    .given-box{background:var(--surface-off);border:2px solid var(--border);border-radius:var(--r-lg);padding:1rem 1.25rem;margin-bottom:1.25rem}
+    .given-title{font-size:var(--xs);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.625rem}
+    .given-row{display:flex;justify-content:space-between;align-items:center;padding:.375rem 0;border-bottom:1px solid var(--divider)}
+    .given-row:last-child{border-bottom:none}
+    .given-label{font-size:var(--sm);color:var(--muted)}
+    .given-value{font-family:var(--font-d);font-size:var(--lg);font-weight:700;color:var(--primary)}
+
+    /* SLIDERS (explore mode only) */
+    .input-group{margin-bottom:1.25rem}
+    .input-label{display:flex;justify-content:space-between;align-items:center;font-size:var(--sm);font-weight:600;color:var(--muted);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.06em}
+    .input-unit{font-weight:400;font-size:var(--xs);color:var(--faint);text-transform:none;letter-spacing:0}
+    input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:var(--r-full);background:var(--divider);outline:none;cursor:pointer}
+    input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:var(--primary);cursor:grab;border:3px solid var(--surface);box-shadow:0 0 0 2px var(--primary);transition:transform var(--ease)}
+    input[type="range"]::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.15)}
+    input[type="range"]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--primary);cursor:grab;border:3px solid var(--surface)}
+    .num-input-row{display:flex;align-items:center;gap:.75rem;margin-top:.5rem}
+    .num-input{width:90px;padding:.375rem .75rem;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);font-size:var(--sm);font-weight:600;text-align:center;transition:border-color var(--ease),box-shadow var(--ease)}
+    .num-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
+    .slider-val{font-size:var(--sm);font-weight:700;color:var(--primary);min-width:60px;text-align:center;background:var(--primary-lt);padding:.25rem .75rem;border-radius:var(--r-full)}
+
+    /* STUDENT ANSWER INPUTS (practice mode) */
+    .answer-section{margin-bottom:1.25rem}
+    .answer-title{font-size:var(--xs);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem}
+    .answer-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.625rem}
+    .answer-label{flex:1;font-size:var(--sm);font-weight:600;color:var(--text)}
+    .answer-input{width:120px;padding:.5rem .75rem;background:var(--surface-2);border:2px solid var(--border);border-radius:var(--r-md);font-size:var(--sm);font-weight:700;text-align:center;transition:border-color var(--ease),box-shadow var(--ease)}
+    .answer-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
+    .answer-input.correct{border-color:var(--safe);background:var(--safe-lt)}
+    .answer-input.incorrect{border-color:var(--danger);background:var(--danger-lt)}
+    .answer-unit{font-size:var(--xs);color:var(--faint);white-space:nowrap}
+
+    /* FORMULA WORKBOX (practice — student fills in blanks) */
+    .workbox{background:var(--surface-off);border:1px solid var(--border);border-radius:var(--r-lg);padding:1rem 1.25rem;margin-bottom:1rem}
+    .workbox-title{font-size:var(--xs);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.625rem}
+    .workbox-line{font-family:'Courier New',Courier,monospace;font-size:var(--sm);color:var(--muted);margin-bottom:.375rem;line-height:1.7}
+    .workbox-line.hint{color:var(--primary);font-weight:700}
+    .workbox-line.hidden{filter:blur(6px);user-select:none;pointer-events:none;transition:filter .4s ease}
+    .workbox-line.revealed{filter:none}
+
+    /* CHECK / NEW PROBLEM BUTTONS */
+    .btn-check{width:100%;padding:.75rem 1rem;background:var(--primary);color:#fff;border:none;border-radius:var(--r-lg);font-size:var(--sm);font-weight:700;letter-spacing:.03em;transition:background var(--ease),transform var(--ease),box-shadow var(--ease);margin-bottom:.5rem}
+    .btn-check:hover{background:var(--primary-h);transform:translateY(-1px);box-shadow:var(--sh-md)}
+    .btn-check:active{transform:translateY(0)}
+    .btn-check:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    .btn-row{display:flex;gap:.625rem}
+    .btn-secondary{flex:1;padding:.625rem 1rem;background:transparent;border:1px solid var(--border);border-radius:var(--r-lg);font-size:var(--sm);font-weight:600;color:var(--muted);transition:all var(--ease)}
+    .btn-secondary:hover{border-color:var(--muted);color:var(--text)}
+
+    /* FEEDBACK BANNER */
+    .feedback{display:none;padding:.875rem 1rem;border-radius:var(--r-lg);font-size:var(--sm);line-height:1.6;margin-bottom:.75rem}
+    .feedback.show{display:block}
+    .feedback.pass{background:var(--safe-lt);color:var(--safe);border:1px solid color-mix(in oklab,var(--safe) 30%,transparent)}
+    .feedback.fail{background:var(--danger-lt);color:var(--danger);border:1px solid color-mix(in oklab,var(--danger) 30%,transparent)}
+    .feedback.partial{background:var(--warn-lt);color:var(--warn);border:1px solid color-mix(in oklab,var(--warn) 30%,transparent)}
+    .fb-head{font-weight:700;margin-bottom:.375rem}
+
+    /* RESULTS (explore mode) */
+    .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.25rem}
+    .result-item{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-lg);padding:1rem;text-align:center}
+    .result-label{font-size:var(--xs);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem}
+    .result-value{font-family:var(--font-d);font-size:var(--xl);font-weight:700;color:var(--primary);line-height:1}
+    .result-sub{font-size:var(--xs);color:var(--faint);margin-top:.25rem}
+
+    /* ANGLE STATUS */
+    .angle-status{display:flex;align-items:center;gap:.75rem;padding:1rem 1.25rem;border-radius:var(--r-lg);font-weight:600;font-size:var(--sm);transition:all var(--ease)}
+    .angle-status.safe{background:var(--safe-lt);color:var(--safe);border:1px solid color-mix(in oklab,var(--safe) 30%,transparent)}
+    .angle-status.warn{background:var(--warn-lt);color:var(--warn);border:1px solid color-mix(in oklab,var(--warn) 30%,transparent)}
+    .angle-status.danger{background:var(--danger-lt);color:var(--danger);border:1px solid color-mix(in oklab,var(--danger) 30%,transparent)}
+    .status-icon{font-size:1.25rem;flex-shrink:0}
+    .status-text{display:flex;flex-direction:column;gap:2px}
+    .status-title{font-weight:700}
+    .status-desc{font-size:var(--xs);font-weight:400;opacity:.85}
+
+    /* FORMULA BOX (explore mode) */
+    .formula-box{background:var(--surface-off);border:1px solid var(--border);border-radius:var(--r-lg);padding:1rem 1.25rem;margin-top:1rem}
+    .formula-title{font-size:var(--xs);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem}
+    .formula-steps{display:flex;flex-direction:column;gap:.5rem}
+    .formula-line{font-family:'Courier New',Courier,monospace;font-size:var(--sm);color:var(--muted)}
+    .formula-line.highlight{color:var(--primary);font-weight:700}
+
+    /* TIP BOX */
+    .tip-box{background:var(--primary-lt);border:1px solid color-mix(in oklab,var(--primary) 25%,transparent);border-radius:var(--r-lg);padding:.75rem 1rem;font-size:var(--sm);color:var(--primary);margin-top:1rem;line-height:1.6}
+    .tip-box strong{font-weight:700}
+
+    /* CANVAS */
+    .canvas-wrap{position:relative;border-radius:var(--r-xl);overflow:hidden;background:var(--surface-2);border:1px solid var(--border)}
+    canvas{display:block;width:100%;height:auto}
+
+    /* ANGLE GAUGE */
+    .gauge-wrap{margin-top:1rem}
+    .gauge-label-row{display:flex;justify-content:space-between;font-size:var(--xs);color:var(--faint);margin-bottom:.5rem}
+    .gauge-bar{height:12px;border-radius:var(--r-full);background:linear-gradient(90deg,var(--danger) 0%,var(--danger) 24%,var(--warn) 24%,var(--warn) 28%,var(--safe) 28%,var(--safe) 82%,var(--warn) 82%,var(--warn) 86%,var(--danger) 86%);position:relative}
+    .gauge-needle{position:absolute;top:-5px;width:4px;height:22px;background:var(--text);border-radius:var(--r-full);transform:translateX(-50%);transition:left var(--ease);box-shadow:0 0 6px rgba(0,0,0,.4)}
+    .gauge-needle::before{content:'';position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:12px;height:12px;background:var(--text);border-radius:50%}
+    .gauge-zones{display:flex;justify-content:space-between;margin-top:.5rem;font-size:var(--xs)}
+    .zone-label{color:var(--faint);text-align:center;flex:1}
+    /* hidden until revealed */
+    .gauge-hidden .gauge-needle{display:none}
+    .gauge-hidden .gauge-bar{opacity:.35}
+
+    /* PRACTICE SCORE */
+    .score-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:1rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1.5rem}
+    .score-label{font-size:var(--sm);font-weight:700;color:var(--muted);white-space:nowrap}
+    .score-track{flex:1;height:8px;background:var(--divider);border-radius:var(--r-full);overflow:hidden}
+    .score-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--safe));border-radius:var(--r-full);transition:width .5s ease;width:0%}
+    .score-count{font-family:var(--font-d);font-size:var(--lg);font-weight:700;color:var(--primary);white-space:nowrap}
+
+    /* SCENARIOS */
+    .scenario-intro{margin-bottom:2rem}
+    .scenario-intro h2{font-family:var(--font-d);font-size:var(--xl);font-weight:700;letter-spacing:-.02em;margin-bottom:.5rem}
+    .scenario-intro p{color:var(--muted)}
+    .scenarios-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1.25rem}
+    .scenario-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--r-xl);padding:1.5rem;box-shadow:var(--sh-md);transition:border-color var(--ease),box-shadow var(--ease)}
+    .scenario-card.solved-pass{border-color:var(--safe);box-shadow:0 0 0 3px var(--safe-glow)}
+    .scenario-header{display:flex;align-items:flex-start;gap:.75rem;margin-bottom:1rem}
+    .scenario-icon{font-size:2rem;line-height:1;flex-shrink:0}
+    .scenario-badge{display:inline-block;font-size:var(--xs);font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:2px .75rem;border-radius:var(--r-full);margin-bottom:.25rem}
+    .badge-critical{background:var(--danger-lt);color:var(--danger)}
+    .badge-moderate{background:var(--warn-lt);color:var(--warn)}
+    .badge-training{background:var(--primary-lt);color:var(--primary)}
+    .scenario-title{font-family:var(--font-d);font-size:var(--base);font-weight:700}
+    .scenario-body{font-size:var(--sm);color:var(--muted);line-height:1.7;margin-bottom:1rem}
+    .scenario-known{background:var(--surface-off);border-radius:var(--r-md);padding:.75rem 1rem;margin-bottom:1rem;font-size:var(--sm)}
+    .known-title{font-size:var(--xs);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.5rem}
+    .known-row{display:flex;justify-content:space-between;color:var(--text);font-weight:500}
+    .known-row+.known-row{border-top:1px solid var(--divider);margin-top:.5rem;padding-top:.5rem}
+    .sc-input-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem}
+    .sc-input-label{flex:1;font-size:var(--sm);font-weight:600;color:var(--muted)}
+    .sc-input{width:110px;padding:.5rem .75rem;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);font-size:var(--sm);font-weight:700;text-align:center;transition:border-color var(--ease),box-shadow var(--ease)}
+    .sc-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
+    .sc-input.correct{border-color:var(--safe)}
+    .sc-input.incorrect{border-color:var(--danger)}
+    .sc-submit{width:100%;padding:.75rem 1rem;background:var(--primary);color:#fff;border:none;border-radius:var(--r-lg);font-size:var(--sm);font-weight:700;letter-spacing:.03em;transition:background var(--ease),transform var(--ease),box-shadow var(--ease)}
+    .sc-submit:hover{background:var(--primary-h);transform:translateY(-1px);box-shadow:var(--sh-md)}
+    .sc-submit:active{transform:translateY(0)}
+    .sc-feedback{display:none;border-radius:var(--r-lg);padding:1rem;margin-top:.75rem;font-size:var(--sm);line-height:1.6}
+    .sc-feedback.show{display:block}
+    .sc-feedback.pass{background:var(--safe-lt);color:var(--safe);border:1px solid color-mix(in oklab,var(--safe) 30%,transparent)}
+    .sc-feedback.fail{background:var(--danger-lt);color:var(--danger);border:1px solid color-mix(in oklab,var(--danger) 30%,transparent)}
+    .sc-feedback.partial{background:var(--warn-lt);color:var(--warn);border:1px solid color-mix(in oklab,var(--warn) 30%,transparent)}
+    .feedback-header{font-weight:700;margin-bottom:.5rem}
+    .progress-bar-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:1rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1.5rem}
+    .progress-label{font-size:var(--sm);font-weight:700;color:var(--muted);white-space:nowrap}
+    .progress-track{flex:1;height:8px;background:var(--divider);border-radius:var(--r-full);overflow:hidden}
+    .progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--safe));border-radius:var(--r-full);transition:width .5s ease;width:0%}
+    .progress-count{font-family:var(--font-d);font-size:var(--lg);font-weight:700;color:var(--primary);white-space:nowrap}
+
+    /* THEORY */
+    .theory-section{max-width:860px;margin:0 auto}
+    .theory-section h2{font-family:var(--font-d);font-size:var(--xl);font-weight:700;letter-spacing:-.02em;margin-bottom:.5rem}
+    .theory-section>p{color:var(--muted);margin-bottom:2rem}
+    .theory-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+    @media(max-width:700px){.theory-grid{grid-template-columns:1fr}}
+    .theory-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:1.5rem;box-shadow:var(--sh-sm)}
+    .theory-card h3{font-family:var(--font-d);font-size:var(--lg);font-weight:700;margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem}
+    .theory-card p,.theory-card li{font-size:var(--sm);color:var(--muted);line-height:1.75}
+    .theory-card ul{padding-left:1.25rem}
+    .theory-card li{margin-bottom:.5rem}
+    .math-block{background:var(--surface-off);border-left:3px solid var(--primary);border-radius:0 var(--r-md) var(--r-md) 0;padding:1rem 1.25rem;margin:1rem 0;font-family:'Courier New',Courier,monospace;font-size:var(--sm);color:var(--text);line-height:2}
+
+    /* MOBILE */
+    @media(max-width:640px){
+      .app-header{padding:.75rem 1rem}.tabs{display:none}
+      main{padding:1rem}.hero h1{font-size:var(--xl)}
+      .result-grid{grid-template-columns:1fr}.scenarios-grid{grid-template-columns:1fr}
+    }
+    .mobile-tabs{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--divider);padding:.5rem 1rem calc(.5rem + env(safe-area-inset-bottom));z-index:100}
+    @media(max-width:640px){.mobile-tabs{display:flex;justify-content:space-around}body{padding-bottom:70px}}
+    .mob-tab{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;color:var(--faint);font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:.5rem .75rem;border-radius:var(--r-md);transition:color var(--ease)}
+    .mob-tab.active{color:var(--primary)}
+
+    /* PRACTICE PROBLEM POOL label */
+    .prob-meta{display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}
+    .prob-badge{font-size:var(--xs);font-weight:700;padding:.2rem .75rem;border-radius:var(--r-full);background:var(--safe-lt);color:var(--safe)}
+    .prob-num{font-size:var(--xs);color:var(--muted)}
+  </style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="logo-group">
+    <svg class="logo-icon" viewBox="0 0 40 40" fill="none" aria-label="LadderSim logo">
+      <rect width="40" height="40" rx="10" fill="var(--primary)" opacity="0.15"/>
+      <line x1="10" y1="36" x2="28" y2="8" stroke="var(--primary)" stroke-width="3" stroke-linecap="round"/>
+      <line x1="16" y1="36" x2="34" y2="8" stroke="var(--primary)" stroke-width="3" stroke-linecap="round"/>
+      <line x1="12" y1="30" x2="32" y2="30" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" opacity=".5"/>
+      <line x1="14" y1="23" x2="33" y2="23" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" opacity=".5"/>
+      <line x1="16" y1="16" x2="34" y2="16" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" opacity=".5"/>
+      <line x1="4" y1="36" x2="36" y2="36" stroke="var(--text)" stroke-width="2" stroke-linecap="round" opacity=".25"/>
+    </svg>
+    <div>
+      <div class="logo-text">LadderSim</div>
+      <div class="logo-sub">College Algebra · Pythagorean Theorem</div>
+    </div>
+  </div>
+  <div class="header-controls">
+    <nav class="tabs" role="tablist">
+      <button class="tab-btn active" role="tab" data-section="simulator" aria-selected="true">Simulator</button>
+      <button class="tab-btn" role="tab" data-section="scenarios" aria-selected="false">Emergency Scenarios</button>
+      <button class="tab-btn" role="tab" data-section="theory" aria-selected="false">Theory</button>
+    </nav>
+    <button class="theme-toggle" data-theme-toggle aria-label="Toggle theme">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main>
+
+<!-- ══════════════════════════════ SIMULATOR ══════════════════ -->
+<section class="section active" id="simulator">
+  <div class="hero">
+    <div class="hero-badge">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      Interactive Learning Tool
+    </div>
+    <h1>Ladder Geometry Simulator</h1>
+    <p>Use the Pythagorean theorem to find the required ladder length and safe climb angle. Choose <strong>Explore</strong> to see all values, or <strong>Practice</strong> to solve problems yourself.</p>
+  </div>
+
+  <!-- MODE SWITCHER -->
+  <div class="mode-bar">
+    <button class="mode-btn active" id="btnExplore" onclick="setMode('explore')">
+      🔍 Explore Mode
+    </button>
+    <button class="mode-btn" id="btnPractice" onclick="setMode('practice')">
+      ✏️ Practice Mode
+    </button>
+  </div>
+
+  <div class="sim-grid">
+
+    <!-- LEFT PANEL -->
+    <div class="card" id="leftPanel">
+
+      <!-- ─── EXPLORE MODE LEFT ─── -->
+      <div id="exploreLeft">
+        <h2 class="card-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          Set the Scene
+        </h2>
+        <div class="input-group">
+          <div class="input-label">Building Height <span class="input-unit">feet</span></div>
+          <input type="range" id="heightSlider" min="4" max="60" value="20" step="0.5"/>
+          <div class="num-input-row">
+            <span style="font-size:var(--sm);color:var(--muted)">h =</span>
+            <input type="number" class="num-input" id="heightNum" value="20" min="4" max="60" step="0.5"/>
+            <span class="slider-val" id="heightVal">20 ft</span>
+          </div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">Base Distance <span class="input-unit">feet</span></div>
+          <input type="range" id="baseSlider" min="1" max="40" value="6" step="0.5"/>
+          <div class="num-input-row">
+            <span style="font-size:var(--sm);color:var(--muted)">d =</span>
+            <input type="number" class="num-input" id="baseNum" value="6" min="1" max="40" step="0.5"/>
+            <span class="slider-val" id="baseVal">6 ft</span>
+          </div>
+        </div>
+
+        <div class="result-grid">
+          <div class="result-item">
+            <div class="result-label">Ladder Length</div>
+            <div class="result-value" id="ladderLen">—</div>
+            <div class="result-sub">Hypotenuse (c)</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Climb Angle</div>
+            <div class="result-value" id="climbAngle">—</div>
+            <div class="result-sub">from ground</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Height : Base</div>
+            <div class="result-value" id="heightRatio">—</div>
+            <div class="result-sub">ratio</div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Reach Point</div>
+            <div class="result-value" id="reachPoint">—</div>
+            <div class="result-sub">on building</div>
+          </div>
+        </div>
+
+        <div class="angle-status safe" id="angleStatus">
+          <span class="status-icon">✅</span>
+          <div class="status-text">
+            <span class="status-title" id="statusTitle">Safe Climbing Angle</span>
+            <span class="status-desc" id="statusDesc">Within the recommended 75° zone</span>
+          </div>
+        </div>
+
+        <div class="formula-box">
+          <div class="formula-title">Step-by-Step Solution</div>
+          <div class="formula-steps">
+            <div class="formula-line">a² + b² = c²</div>
+            <div class="formula-line" id="fLine1">h² + d² = c²</div>
+            <div class="formula-line" id="fLine2">__ ² + __ ² = c²</div>
+            <div class="formula-line" id="fLine3">__ + __ = c²</div>
+            <div class="formula-line highlight" id="fLine4">c = √__ = __ ft</div>
+          </div>
+        </div>
+        <div class="tip-box" id="angleTip">
+          <strong>💡 Tip:</strong> The <strong>4:1 rule</strong> — 1 ft of base for every 4 ft of height — gives a ~76° angle, near the ideal safe zone.
+        </div>
+      </div>
+
+      <!-- ─── PRACTICE MODE LEFT ─── -->
+      <div id="practiceLeft" style="display:none">
+        <h2 class="card-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+          Solve It Yourself
+        </h2>
+
+        <div class="prob-meta">
+          <span class="prob-badge">Practice Problem</span>
+          <span class="prob-num" id="probNum">Problem 1</span>
+        </div>
+
+        <!-- Given values -->
+        <div class="given-box">
+          <div class="given-title">Given Values</div>
+          <div class="given-row">
+            <span class="given-label">Building height (h)</span>
+            <span class="given-value" id="givenH">— ft</span>
+          </div>
+          <div class="given-row">
+            <span class="given-label">Base distance (d)</span>
+            <span class="given-value" id="givenD">— ft</span>
+          </div>
+        </div>
+
+        <!-- Formula scaffold -->
+        <div class="workbox">
+          <div class="workbox-title">Your Work — fill in the blanks</div>
+          <div class="workbox-line">c² = h² + d²</div>
+          <div class="workbox-line" id="wLine1">c² = (__)² + (__)²</div>
+          <div class="workbox-line" id="wLine2">c² = __ + __</div>
+          <div class="workbox-line" id="wLine3">c² = __</div>
+          <div class="workbox-line hint hidden" id="wLine4" style="margin-top:.5rem">c = __ ft  |  angle = __°</div>
+        </div>
+
+        <!-- Student inputs -->
+        <div class="answer-section">
+          <div class="answer-title">Your Answers</div>
+          <div class="answer-row">
+            <label class="answer-label" for="ansLen">Ladder length (c)</label>
+            <input type="number" class="answer-input" id="ansLen" placeholder="?" step="0.01" min="0" />
+            <span class="answer-unit">ft</span>
+          </div>
+          <div class="answer-row">
+            <label class="answer-label" for="ansAngle">Climb angle (θ)</label>
+            <input type="number" class="answer-input" id="ansAngle" placeholder="?" step="0.1" min="0" max="90" />
+            <span class="answer-unit">°</span>
+          </div>
+          <div class="answer-row">
+            <label class="answer-label" for="ansSafe">Is the angle safe? (70°–80°)</label>
+            <select class="answer-input" id="ansSafe" style="width:120px">
+              <option value="">—</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="feedback" id="practiceFeedback"></div>
+
+        <button class="btn-check" id="btnCheck" onclick="checkPractice()">Check My Answers</button>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="revealAnswer()">Show Answer</button>
+          <button class="btn-secondary" onclick="newProblem()">New Problem →</button>
+        </div>
+
+        <!-- Score tracker -->
+        <div class="score-bar" style="margin-top:1.25rem;margin-bottom:0">
+          <span class="score-label">Score</span>
+          <div class="score-track"><div class="score-fill" id="scoreFill"></div></div>
+          <span class="score-count" id="scoreCount">0 / 0</span>
+        </div>
+      </div>
+
+    </div><!-- /left panel -->
+
+    <!-- RIGHT PANEL (canvas + gauge — shared by both modes) -->
+    <div>
+      <div class="card" style="margin-bottom:1.25rem">
+        <h2 class="card-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          Visual Diagram
+        </h2>
+        <div class="canvas-wrap">
+          <canvas id="ladderCanvas" width="560" height="420" aria-label="Ladder geometry diagram"></canvas>
+        </div>
+      </div>
+      <div class="card" id="gaugeCard">
+        <h2 class="card-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14l-4-4 1.41-1.41L12 13.17l6.59-6.58L20 8l-8 8z"/></svg>
+          Safe Angle Gauge (0° – 90°)
+        </h2>
+        <div class="gauge-wrap" id="gaugeWrap">
+          <div class="gauge-label-row"><span>0°</span><span>30°</span><span>60°</span><span>75° Safe Zone</span><span>90°</span></div>
+          <div class="gauge-bar"><div class="gauge-needle" id="gaugeNeedle"></div></div>
+          <div class="gauge-zones">
+            <span class="zone-label" style="color:var(--danger)">Too Flat</span>
+            <span class="zone-label" style="color:var(--safe);flex:3">✅ Safe Zone (70°–80°)</span>
+            <span class="zone-label" style="color:var(--danger)">Too Steep</span>
+          </div>
+        </div>
+        <!-- hidden state message for practice mode -->
+        <div id="gaugeHiddenMsg" style="display:none;text-align:center;padding:.5rem;font-size:var(--sm);color:var(--muted)">
+          Enter your angle answer and click <strong>Check</strong> to reveal the gauge.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════ SCENARIOS ══════════════════ -->
+<section class="section" id="scenarios">
+  <div class="scenario-intro">
+    <h2>Emergency Rescue Scenarios</h2>
+    <p>Calculate the required ladder length and climb angle from scratch — no sliders, no hints until you submit. Determine whether the available ladder is adequate for each rescue.</p>
+  </div>
+  <div class="progress-bar-wrap">
+    <span class="progress-label">Mission Progress</span>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <span class="progress-count" id="progressCount">0 / 6</span>
+  </div>
+  <div class="scenarios-grid" id="scenariosGrid"></div>
+</section>
+
+<!-- ══════════════════════════════ THEORY ════════════════════ -->
+<section class="section" id="theory">
+  <div class="theory-section">
+    <h2>Mathematical Foundations</h2>
+    <p>Everything the Ladder Simulator uses comes from two core College Algebra concepts — the Pythagorean Theorem and basic trigonometry.</p>
+    <div class="theory-grid">
+      <div class="theory-card">
+        <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><polygon points="12 2 2 22 22 22"/></svg>Pythagorean Theorem</h3>
+        <p>For any right triangle with legs a and b and hypotenuse c:</p>
+        <div class="math-block">a² + b² = c²<br><br>For a ladder:<br>height² + base² = length²<br><br>Solving for length:<br>c = √(a² + b²)</div>
+        <p>The ladder is always the hypotenuse — the longest side.</p>
+      </div>
+      <div class="theory-card">
+        <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>Safe Angle Calculation</h3>
+        <p>The climb angle θ is measured from the ground to the ladder:</p>
+        <div class="math-block">tan(θ) = height / base<br>θ = arctan(h / d)<br><br>Safe range: 70° ≤ θ ≤ 80°<br>Optimal: θ ≈ 75–76°</div>
+        <p>OSHA recommends 75°. The <strong>4:1 rule</strong> achieves ~76°.</p>
+      </div>
+      <div class="theory-card">
+        <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>The 4:1 Safety Rule</h3>
+        <ul>
+          <li>Set the base 1 ft out for every 4 ft of height.</li>
+          <li>Example: 20 ft wall → base at 5 ft from wall.</li>
+          <li>Gives arctan(4) ≈ <strong>76°</strong> — within the safe zone.</li>
+          <li>Too flat (&lt;70°): ladder slides outward.</li>
+          <li>Too steep (&gt;80°): ladder tips backward.</li>
+        </ul>
+      </div>
+      <div class="theory-card">
+        <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Common Mistakes</h3>
+        <ul>
+          <li><strong>Forgetting to square root:</strong> c = √(a²+b²), not a²+b².</li>
+          <li><strong>Wrong hypotenuse:</strong> the ladder (longest side) is always c.</li>
+          <li><strong>Inverting arctan:</strong> it's h/d, not d/h.</li>
+          <li><strong>Mixed units:</strong> height and base must be in the same unit.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<nav class="mobile-tabs">
+  <button class="mob-tab active" data-section="simulator">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Sim
+  </button>
+  <button class="mob-tab" data-section="scenarios">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Scenarios
+  </button>
+  <button class="mob-tab" data-section="theory">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>Theory
+  </button>
+</nav>
+
+<script>
+/* ── THEME ──────────────────────────────────────────────────── */
+(function(){
+  const t=document.querySelector('[data-theme-toggle]'),r=document.documentElement;
+  let d=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+  r.setAttribute('data-theme',d);
+  function upIcon(){t.innerHTML=d==='dark'
+    ?'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
+    :'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';}
+  upIcon();
+  t&&t.addEventListener('click',()=>{d=d==='dark'?'light':'dark';r.setAttribute('data-theme',d);upIcon();drawLadder();});
+})();
+
+/* ── TABS ───────────────────────────────────────────────────── */
+document.querySelectorAll('[data-section]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const sec=btn.dataset.section;
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('[data-section]').forEach(b=>{b.classList.remove('active');b.setAttribute&&b.setAttribute('aria-selected','false');});
+    document.getElementById(sec).classList.add('active');
+    document.querySelectorAll(`[data-section="${sec}"]`).forEach(b=>{b.classList.add('active');b.setAttribute&&b.setAttribute('aria-selected','true');});
+    if(sec==='simulator') drawLadder();
+  });
+});
+
+/* ══════════════════════════════════════════════════════════════
+   EXPLORE MODE
+══════════════════════════════════════════════════════════════ */
+const heightSlider=document.getElementById('heightSlider');
+const baseSlider=document.getElementById('baseSlider');
+const heightNum=document.getElementById('heightNum');
+const baseNum=document.getElementById('baseNum');
+
+function getH(){return parseFloat(heightSlider.value);}
+function getB(){return parseFloat(baseSlider.value);}
+
+function syncInput(slider,num,display,unit){
+  slider.addEventListener('input',()=>{num.value=slider.value;display.textContent=slider.value+' '+unit;if(currentMode==='explore')updateExplore();else drawLadder();});
+  num.addEventListener('input',()=>{let v=Math.min(Math.max(parseFloat(num.value)||0,+slider.min),+slider.max);slider.value=v;display.textContent=v+' '+unit;if(currentMode==='explore')updateExplore();else drawLadder();});
+}
+syncInput(heightSlider,heightNum,document.getElementById('heightVal'),'ft');
+syncInput(baseSlider,baseNum,document.getElementById('baseVal'),'ft');
+
+function updateExplore(){
+  const h=getH(),b=getB();
+  const c=Math.sqrt(h*h+b*b);
+  const deg=Math.atan2(h,b)*180/Math.PI;
+  document.getElementById('ladderLen').textContent=c.toFixed(2)+' ft';
+  document.getElementById('climbAngle').textContent=deg.toFixed(1)+'°';
+  document.getElementById('heightRatio').textContent=(h/b).toFixed(2)+':1';
+  document.getElementById('reachPoint').textContent=h.toFixed(1)+' ft';
+  document.getElementById('fLine1').textContent=`${h}² + ${b}² = c²`;
+  document.getElementById('fLine2').textContent=`${(h*h).toFixed(1)} + ${(b*b).toFixed(1)} = c²`;
+  document.getElementById('fLine3').textContent=`${(h*h+b*b).toFixed(1)} = c²`;
+  document.getElementById('fLine4').textContent=`c = √${(h*h+b*b).toFixed(1)} = ${c.toFixed(2)} ft`;
+  updateAngleStatus(deg,true);
+  drawLadder();
+}
+
+function updateAngleStatus(deg,showGauge){
+  const status=document.getElementById('angleStatus');
+  const title=document.getElementById('statusTitle');
+  const desc=document.getElementById('statusDesc');
+  const tip=document.getElementById('angleTip');
+  status.className='angle-status';
+  if(deg>=70&&deg<=80){
+    status.classList.add('safe');status.querySelector('.status-icon').textContent='✅';
+    title.textContent='Safe Climbing Angle';
+    desc.textContent=`${deg.toFixed(1)}° is within the recommended 70°–80° zone.`;
+    tip&&(tip.innerHTML='<strong>💡 Tip:</strong> This is the optimal range — stable and efficient.');
+  } else if(deg>60&&deg<70){
+    status.classList.add('warn');status.querySelector('.status-icon').textContent='⚠️';
+    title.textContent='Angle Too Flat — Caution';
+    desc.textContent=`${deg.toFixed(1)}° is below the 70° minimum.`;
+    tip&&(tip.innerHTML='<strong>⚠️ Warning:</strong> Move the base <strong>closer to the wall</strong> to increase the angle.');
+  } else if(deg>=80&&deg<85){
+    status.classList.add('warn');status.querySelector('.status-icon').textContent='⚠️';
+    title.textContent='Angle Slightly Steep — Caution';
+    desc.textContent=`${deg.toFixed(1)}° exceeds the 80° maximum.`;
+    tip&&(tip.innerHTML='<strong>⚠️ Warning:</strong> Move the base <strong>further from the wall</strong> to reduce the angle.');
+  } else if(deg<=60){
+    status.classList.add('danger');status.querySelector('.status-icon').textContent='🚫';
+    title.textContent='DANGER — Too Flat';
+    desc.textContent=`${deg.toFixed(1)}° — high risk of sliding out.`;
+    tip&&(tip.innerHTML='<strong>🚫 Danger:</strong> Move base <strong>much closer to the wall</strong>.');
+  } else {
+    status.classList.add('danger');status.querySelector('.status-icon').textContent='🚫';
+    title.textContent='DANGER — Too Steep';
+    desc.textContent=`${deg.toFixed(1)}° — high risk of tipping backward.`;
+    tip&&(tip.innerHTML='<strong>🚫 Danger:</strong> Move base <strong>much further from the wall</strong>.');
+  }
+  if(showGauge){
+    const pct=(deg/90)*100;
+    document.getElementById('gaugeNeedle').style.left=pct+'%';
+    document.getElementById('gaugeNeedle').style.display='block';
+    document.getElementById('gaugeWrap').style.opacity='1';
+    document.getElementById('gaugeHiddenMsg').style.display='none';
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PRACTICE MODE
+══════════════════════════════════════════════════════════════ */
+const PRACTICE_POOL=[
+  {h:20,b:5},{h:24,b:7},{h:18,b:5},{h:30,b:8},{h:12,b:3},{h:40,b:10},
+  {h:15,b:4},{h:10,b:3},{h:35,b:9},{h:50,b:12},{h:8,b:2},{h:25,b:6},
+  {h:16,b:4},{h:45,b:11},{h:9,b:2.5},{h:22,b:6},{h:14,b:3.5},{h:28,b:7}
+];
+let practiceIdx=0, practiceCorrect=0, practiceTotal=0, practiceAnswered=false;
+let currentPH=0, currentPB=0;
+let probCount=0;
+
+function newProblem(){
+  // pick a problem that isn't the same as the last one
+  let next;
+  do { next=Math.floor(Math.random()*PRACTICE_POOL.length); } while(next===practiceIdx&&PRACTICE_POOL.length>1);
+  practiceIdx=next;
+  const prob=PRACTICE_POOL[practiceIdx];
+  currentPH=prob.h; currentPB=prob.b;
+  probCount++;
+
+  // set sliders (drives canvas draw)
+  heightSlider.value=prob.h; heightNum.value=prob.h;
+  document.getElementById('heightVal').textContent=prob.h+' ft';
+  baseSlider.value=prob.b; baseNum.value=prob.b;
+  document.getElementById('baseVal').textContent=prob.b+' ft';
+
+  // update given-values display
+  document.getElementById('givenH').textContent=prob.h+' ft';
+  document.getElementById('givenD').textContent=prob.b+' ft';
+  document.getElementById('probNum').textContent='Problem '+probCount;
+
+  // reset workbox scaffold with blanks (shows structure, not values)
+  document.getElementById('wLine1').textContent=`c² = (${prob.h})² + (${prob.b})²`;
+  document.getElementById('wLine2').textContent='c² = ___ + ___';
+  document.getElementById('wLine3').textContent='c² = ___';
+  document.getElementById('wLine4').classList.add('hidden');
+  document.getElementById('wLine4').classList.remove('revealed');
+
+  // clear inputs
+  document.getElementById('ansLen').value='';
+  document.getElementById('ansAngle').value='';
+  document.getElementById('ansSafe').value='';
+  document.getElementById('ansLen').className='answer-input';
+  document.getElementById('ansAngle').className='answer-input';
+  document.getElementById('ansSafe').className='answer-input';
+
+  // hide feedback, reset gauge
+  const fb=document.getElementById('practiceFeedback');
+  fb.className='feedback'; fb.innerHTML='';
+  document.getElementById('btnCheck').disabled=false;
+
+  // hide gauge needle until student checks
+  document.getElementById('gaugeNeedle').style.display='none';
+  document.getElementById('gaugeWrap').style.opacity='.35';
+  document.getElementById('gaugeHiddenMsg').style.display='block';
+
+  practiceAnswered=false;
+  drawLadder(true); // draw without revealing c label
+}
+
+function checkPractice(){
+  if(practiceAnswered) return;
+  const h=currentPH, b=currentPB;
+  const expectedC=Math.sqrt(h*h+b*b);
+  const expectedDeg=Math.atan2(h,b)*180/Math.PI;
+  const expectedSafe=(expectedDeg>=70&&expectedDeg<=80)?'yes':'no';
+
+  const lenVal=parseFloat(document.getElementById('ansLen').value);
+  const degVal=parseFloat(document.getElementById('ansAngle').value);
+  const safeVal=document.getElementById('ansSafe').value;
+
+  const lenOk=!isNaN(lenVal)&&Math.abs(lenVal-expectedC)/expectedC<=0.03;
+  const degOk=!isNaN(degVal)&&Math.abs(degVal-expectedDeg)<=1.5;
+  const safeOk=safeVal===expectedSafe;
+
+  document.getElementById('ansLen').className='answer-input '+(isNaN(lenVal)?'':(lenOk?'correct':'incorrect'));
+  document.getElementById('ansAngle').className='answer-input '+(isNaN(degVal)?'':(degOk?'correct':'incorrect'));
+  document.getElementById('ansSafe').className='answer-input '+(safeVal===''?'':(safeOk?'correct':'incorrect'));
+
+  const allOk=lenOk&&degOk&&safeOk;
+  const anyOk=lenOk||degOk||safeOk;
+
+  practiceTotal++;
+  if(allOk) practiceCorrect++;
+  practiceAnswered=true;
+
+  // reveal gauge
+  const pct=(expectedDeg/90)*100;
+  document.getElementById('gaugeNeedle').style.left=pct+'%';
+  document.getElementById('gaugeNeedle').style.display='block';
+  document.getElementById('gaugeWrap').style.opacity='1';
+  document.getElementById('gaugeHiddenMsg').style.display='none';
+  updateAngleStatus(expectedDeg,false);
+
+  // reveal answer in workbox
+  document.getElementById('wLine2').textContent=`c² = ${(h*h).toFixed(1)} + ${(b*b).toFixed(1)}`;
+  document.getElementById('wLine3').textContent=`c² = ${(h*h+b*b).toFixed(1)}`;
+  const wl4=document.getElementById('wLine4');
+  wl4.textContent=`c = ${expectedC.toFixed(2)} ft  |  angle = ${expectedDeg.toFixed(1)}°`;
+  wl4.classList.remove('hidden'); wl4.classList.add('revealed');
+
+  // feedback
+  const fb=document.getElementById('practiceFeedback');
+  if(allOk){
+    fb.className='feedback show pass';
+    fb.innerHTML=`<div class="fb-head">✅ All correct! Great work.</div>Ladder length: <strong>${expectedC.toFixed(2)} ft</strong> &nbsp;|&nbsp; Angle: <strong>${expectedDeg.toFixed(1)}°</strong> (${expectedSafe==='yes'?'✅ safe':'⚠️ outside safe zone'})`;
+  } else if(anyOk){
+    fb.className='feedback show partial';
+    fb.innerHTML=`<div class="fb-head">⚠️ Partially correct — review below.</div>
+      ${lenOk?'✅ Length correct!':'❌ Length: correct answer is <strong>'+expectedC.toFixed(2)+' ft</strong> &nbsp; [c = √(h²+d²) = √('+h+'²+'+b+'²)]'}<br>
+      ${degOk?'✅ Angle correct!':'❌ Angle: correct answer is <strong>'+expectedDeg.toFixed(1)+'°</strong> &nbsp; [θ = arctan(h÷d) = arctan('+h+'÷'+b+')]'}<br>
+      ${safeOk?'✅ Safety call correct!':'❌ Safety: angle is <strong>'+(expectedSafe==='yes'?'within':'outside')+'</strong> the 70°–80° zone'}`;
+  } else {
+    fb.className='feedback show fail';
+    fb.innerHTML=`<div class="fb-head">❌ Not quite — check the steps in the workbox above.</div>
+      Use: <strong>c = √(h² + d²)</strong> and <strong>θ = arctan(h ÷ d)</strong><br>
+      h = ${h} ft &nbsp;&nbsp; d = ${b} ft`;
+  }
+
+  document.getElementById('btnCheck').disabled=true;
+  updateScore();
+  drawLadder(false); // now draw with full labels
+}
+
+function revealAnswer(){
+  if(practiceAnswered){ newProblem(); return; }
+  // treat as wrong attempt
+  const h=currentPH,b=currentPB;
+  const expectedC=Math.sqrt(h*h+b*b);
+  const expectedDeg=Math.atan2(h,b)*180/Math.PI;
+  practiceTotal++;
+  practiceAnswered=true;
+  document.getElementById('wLine2').textContent=`c² = ${(h*h).toFixed(1)} + ${(b*b).toFixed(1)}`;
+  document.getElementById('wLine3').textContent=`c² = ${(h*h+b*b).toFixed(1)}`;
+  const wl4=document.getElementById('wLine4');
+  wl4.textContent=`c = ${expectedC.toFixed(2)} ft  |  angle = ${expectedDeg.toFixed(1)}°`;
+  wl4.classList.remove('hidden');wl4.classList.add('revealed');
+  const pct=(expectedDeg/90)*100;
+  document.getElementById('gaugeNeedle').style.left=pct+'%';
+  document.getElementById('gaugeNeedle').style.display='block';
+  document.getElementById('gaugeWrap').style.opacity='1';
+  document.getElementById('gaugeHiddenMsg').style.display='none';
+  updateAngleStatus(expectedDeg,false);
+  const fb=document.getElementById('practiceFeedback');
+  fb.className='feedback show fail';
+  fb.innerHTML=`<div class="fb-head">Answer revealed.</div>c = <strong>${expectedC.toFixed(2)} ft</strong> &nbsp;|&nbsp; θ = <strong>${expectedDeg.toFixed(1)}°</strong><br>Study the workbox steps above, then click <strong>New Problem</strong>.`;
+  document.getElementById('btnCheck').disabled=true;
+  updateScore();
+  drawLadder(false);
+}
+
+function updateScore(){
+  const pct=practiceTotal>0?(practiceCorrect/practiceTotal)*100:0;
+  document.getElementById('scoreFill').style.width=pct+'%';
+  document.getElementById('scoreCount').textContent=practiceCorrect+' / '+practiceTotal;
+}
+
+/* ── MODE SWITCH ────────────────────────────────────────────── */
+let currentMode='explore';
+function setMode(mode){
+  currentMode=mode;
+  document.getElementById('btnExplore').className='mode-btn'+(mode==='explore'?' active':'');
+  document.getElementById('btnPractice').className='mode-btn'+(mode==='practice'?' active':'');
+  document.getElementById('exploreLeft').style.display=mode==='explore'?'block':'none';
+  document.getElementById('practiceLeft').style.display=mode==='practice'?'block':'none';
+  if(mode==='explore'){
+    updateExplore();
+  } else {
+    // first time entering practice
+    if(probCount===0) newProblem();
+    else drawLadder(practiceAnswered?false:true);
+  }
+}
+
+/* ── CANVAS ─────────────────────────────────────────────────── */
+function drawLadder(hideCLabel){
+  const canvas=document.getElementById('ladderCanvas');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  const C={
+    bg:dark?'#161b22':'#f8fafc',
+    ground:dark?'#2d3748':'#c4cfdc',
+    building:dark?'#1c2330':'#e8eef5',
+    bStroke:dark?'#2d3748':'#c4cfdc',
+    textMuted:dark?'#8899a6':'#5a6a7e',
+    safe:dark?'#4caf50':'#2e7d32',
+    danger:dark?'#ef5350':'#c62828',
+    warn:dark?'#ff9800':'#e65100',
+    angleArc:dark?'rgba(77,166,255,.3)':'rgba(21,101,192,.2)',
+    angleLabel:dark?'#4da6ff':'#1565c0',
+    rung:dark?'#e8c43e':'#e65100',
+    rightAngle:dark?'#4a5568':'#c4cfdc',
+  };
+  const h=getH(),b=getB();
+  const deg=Math.atan2(h,b)*180/Math.PI;
+  const c=Math.sqrt(h*h+b*b);
+  let lc=deg>=70&&deg<=80?C.safe:(deg>60&&deg<70||deg>=80&&deg<85)?C.warn:C.danger;
+
+  const margin=60;
+  const sx=(W-margin*2)/(b+2),sy=(H-margin*2-20)/(h+2);
+  const scale=Math.min(sx,sy,14);
+  const ox=margin+10,oy=H-margin;
+  const bTop={x:ox,y:oy-h*scale};
+  const lBase={x:ox+b*scale,y:oy};
+
+  ctx.fillStyle=C.bg;ctx.fillRect(0,0,W,H);
+
+  // ground
+  ctx.beginPath();ctx.moveTo(ox-20,oy);ctx.lineTo(ox+b*scale+60,oy);
+  ctx.strokeStyle=C.ground;ctx.lineWidth=2;ctx.setLineDash([]);ctx.stroke();
+
+  // building
+  const bW=Math.max(18,scale*2);
+  ctx.fillStyle=C.building;ctx.strokeStyle=C.bStroke;ctx.lineWidth=1.5;
+  ctx.fillRect(ox-bW,oy-h*scale,bW,h*scale);ctx.strokeRect(ox-bW,oy-h*scale,bW,h*scale);
+
+  // windows
+  for(let i=1;i<=Math.min(Math.floor(h/3),8);i++){
+    const wy=oy-i*3*scale+scale;
+    if(wy>oy-h*scale+4&&wy<oy-4){
+      ctx.fillStyle=dark?'rgba(255,214,79,.25)':'rgba(100,150,255,.2)';
+      ctx.fillRect(ox-bW+4,wy,Math.max(5,scale*.7),Math.max(6,scale*.9));
+    }
+  }
+
+  // height label
+  ctx.save();ctx.translate(ox-bW-14,oy-h*scale/2);ctx.rotate(-Math.PI/2);
+  ctx.fillStyle=C.textMuted;ctx.font='bold 12px Arial,sans-serif';ctx.textAlign='center';
+  ctx.fillText(`h = ${h} ft`,0,0);ctx.restore();
+
+  // right-angle box
+  ctx.strokeStyle=C.rightAngle;ctx.lineWidth=1.5;ctx.strokeRect(ox,oy-10,10,10);
+
+  // base label
+  ctx.fillStyle=C.textMuted;ctx.font='bold 12px Arial,sans-serif';ctx.textAlign='center';
+  ctx.fillText(`d = ${b} ft`,ox+b*scale/2,oy+22);
+
+  // angle arc
+  const arcR=Math.min(50,b*scale*.5);
+  const aRad=Math.atan2(h,b);
+  ctx.beginPath();ctx.arc(lBase.x,lBase.y,arcR,-Math.PI,-Math.PI+aRad);
+  ctx.strokeStyle=C.angleArc;ctx.lineWidth=arcR*.6;ctx.stroke();
+
+  // angle label — hidden in practice until revealed
+  const showAngleLabel=(currentMode==='explore'||!hideCLabel);
+  if(showAngleLabel){
+    const lAng=Math.PI+aRad/2;
+    const lx=lBase.x+(arcR+18)*Math.cos(lAng),ly=lBase.y+(arcR+18)*Math.sin(lAng);
+    ctx.fillStyle=C.angleLabel;ctx.font='bold 13px Arial,sans-serif';ctx.textAlign='center';
+    ctx.fillText(`${deg.toFixed(1)}°`,lx,ly);
+  } else {
+    const lAng=Math.PI+aRad/2;
+    const lx=lBase.x+(arcR+18)*Math.cos(lAng),ly=lBase.y+(arcR+18)*Math.sin(lAng);
+    ctx.fillStyle=C.textMuted;ctx.font='bold 13px Arial,sans-serif';ctx.textAlign='center';
+    ctx.fillText('?°',lx,ly);
+  }
+
+  // LADDER rails
+  const lw=Math.max(5,scale*.45);
+  const a2=Math.atan2(bTop.y-lBase.y,bTop.x-lBase.x);
+  const ro=lw/2;
+  function rail(off){
+    const px=Math.sin(a2)*off,py=-Math.cos(a2)*off;
+    ctx.beginPath();ctx.moveTo(lBase.x+px,lBase.y+py);ctx.lineTo(bTop.x+px,bTop.y+py);
+    ctx.strokeStyle=lc;ctx.lineWidth=Math.max(3,scale*.22);ctx.setLineDash([]);ctx.lineCap='round';ctx.stroke();
+  }
+  rail(-ro);rail(+ro);
+
+  // rungs
+  const nr=Math.floor(c/1.5);
+  for(let i=1;i<=nr;i++){
+    const tt=i/(nr+1);
+    const rx=lBase.x+(bTop.x-lBase.x)*tt,ry=lBase.y+(bTop.y-lBase.y)*tt;
+    const px=Math.sin(a2)*ro*1.2,py=-Math.cos(a2)*ro*1.2;
+    ctx.beginPath();ctx.moveTo(rx-px,ry-py);ctx.lineTo(rx+px,ry+py);
+    ctx.strokeStyle=C.rung;ctx.lineWidth=Math.max(2,scale*.15);ctx.lineCap='round';ctx.stroke();
+  }
+
+  // hypotenuse label — hidden in practice until answered
+  const showC=(currentMode==='explore'||!hideCLabel);
+  const midX=(lBase.x+bTop.x)/2,midY=(lBase.y+bTop.y)/2;
+  const pox=Math.sin(a2)*(ro+20),poy=-Math.cos(a2)*(ro+20);
+  const lx2=midX+pox,ly2=midY+poy;
+  const txt=showC?`c = ${c.toFixed(2)} ft`:'c = ?';
+  ctx.font='bold 12px Arial,sans-serif';
+  const tw=ctx.measureText(txt).width;
+  ctx.fillStyle=dark?'rgba(22,27,34,.85)':'rgba(248,250,252,.85)';
+  ctx.beginPath();if(ctx.roundRect)ctx.roundRect(lx2-tw/2-6,ly2-13,tw+12,18,4);else ctx.rect(lx2-tw/2-6,ly2-13,tw+12,18);ctx.fill();
+  ctx.fillStyle=showC?lc:C.textMuted;ctx.textAlign='center';
+  ctx.fillText(txt,lx2,ly2);
+
+  // dots
+  [bTop,lBase].forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.fillStyle=lc;ctx.fill();});
+
+  // dashed optimal line (explore only, when off-zone)
+  if(currentMode==='explore'&&(deg<70||deg>80)){
+    const optB=h/Math.tan(75*Math.PI/180);
+    const dx=ox+optB*scale;
+    if(dx<W-20&&dx>ox+5){
+      ctx.beginPath();ctx.moveTo(dx,oy);ctx.lineTo(ox,bTop.y);
+      ctx.strokeStyle=C.safe;ctx.lineWidth=1.5;ctx.setLineDash([5,5]);ctx.globalAlpha=.45;ctx.stroke();
+      ctx.globalAlpha=1;ctx.setLineDash([]);
+      ctx.fillStyle=C.safe;ctx.font='11px Arial,sans-serif';ctx.textAlign='center';
+      ctx.fillText('75° optimal',dx+28,oy+22);
+    }
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   EMERGENCY SCENARIOS
+══════════════════════════════════════════════════════════════ */
+const SCENARIOS=[
+  {id:'apt_fire',icon:'🔥',badge:'critical',badgeLabel:'Critical',title:'Apartment Building Fire — 3rd Floor',
+    body:'A victim is trapped at a 3rd-floor window. The base can only be placed 7 feet from the building due to parked vehicles. Calculate the minimum ladder length needed and determine whether the 28-ft truck ladder reaches safely.',
+    knownLabel1:'Window height (h)',knownVal1:'24 ft',knownLabel2:'Base distance (d)',knownVal2:'7 ft',
+    availableLadder:28,h:24,b:7,tolerancePct:3,
+    hint:'c = √(24²+7²) = √(576+49) = √625 = 25 ft. Angle = arctan(24/7) ≈ 73.7°.',
+    adequateMessage:'The 28 ft ladder DOES reach. Rescue is possible!'},
+  {id:'roof_rescue',icon:'🏗️',badge:'critical',badgeLabel:'Critical',title:'Roof Collapse — Worker Stranded',
+    body:'A construction worker is stranded on an 18-ft roof after a partial collapse. The only clear base position is 5 feet from the building perimeter. Will the 20-ft ladder on site reach?',
+    knownLabel1:'Roof height (h)',knownVal1:'18 ft',knownLabel2:'Base clearance (d)',knownVal2:'5 ft',
+    availableLadder:20,h:18,b:5,tolerancePct:3,
+    hint:'c = √(18²+5²) = √(324+25) = √349 ≈ 18.68 ft. Angle = arctan(18/5) ≈ 74.4°.',
+    adequateMessage:'The 20 ft ladder DOES reach. The worker can be rescued!'},
+  {id:'window_wash',icon:'🪟',badge:'moderate',badgeLabel:'Moderate',title:'Skyscraper Window Maintenance',
+    body:'A window-washing crew needs to reach a sill 40 feet up. Safety protocol requires the base be exactly 10 feet from the building. Is a 45-ft ladder sufficient?',
+    knownLabel1:'Window height (h)',knownVal1:'40 ft',knownLabel2:'Base distance (d)',knownVal2:'10 ft',
+    availableLadder:45,h:40,b:10,tolerancePct:3,
+    hint:'c = √(40²+10²) = √1700 ≈ 41.23 ft. Angle = arctan(40/10) ≈ 76°.',
+    adequateMessage:'The 45 ft ladder DOES reach. Work can proceed!'},
+  {id:'flood_rescue',icon:'🌊',badge:'critical',badgeLabel:'Critical',title:'Flash Flood — Rooftop Evacuation',
+    body:'A family is stranded on a rooftop 10 ft above water level. A rescue boat can get no closer than 3 feet from the wall. Calculate the minimum ladder needed and check if 11 ft is enough.',
+    knownLabel1:'Roof height (h)',knownVal1:'10 ft',knownLabel2:'Boat clearance (d)',knownVal2:'3 ft',
+    availableLadder:11,h:10,b:3,tolerancePct:3,
+    hint:'c = √(10²+3²) = √109 ≈ 10.44 ft. Angle = arctan(10/3) ≈ 73.3°.',
+    adequateMessage:'The 11 ft ladder DOES reach. The family can be evacuated!'},
+  {id:'cat_rescue',icon:'🐱',badge:'training',badgeLabel:'Training',title:'Cat Stuck in Tree — Fire Drill',
+    body:'Training scenario: a cat is 15 ft up a tree. The safe base position is 4 feet from the trunk. Does the department\'s 16-ft extension ladder reach, and is the angle safe?',
+    knownLabel1:'Branch height (h)',knownVal1:'15 ft',knownLabel2:'Base from tree (d)',knownVal2:'4 ft',
+    availableLadder:16,h:15,b:4,tolerancePct:3,
+    hint:'c = √(15²+4²) = √241 ≈ 15.52 ft. Angle = arctan(15/4) ≈ 75.1°. Near-perfect 4:1 ratio!',
+    adequateMessage:'The 16 ft ladder DOES reach. Angle is nearly perfect at 75°!'},
+  {id:'high_rise',icon:'🏢',badge:'critical',badgeLabel:'Critical',title:'High-Rise Rescue — 6th Floor',
+    body:'A resident is trapped on a 6th-floor window 55 ft up. A narrow alley limits the base to 12 feet. Calculate the required ladder length and determine if a 60-ft aerial ladder is adequate.',
+    knownLabel1:'Window height (h)',knownVal1:'55 ft',knownLabel2:'Alley width (d)',knownVal2:'12 ft',
+    availableLadder:60,h:55,b:12,tolerancePct:3,
+    hint:'c = √(55²+12²) = √3169 ≈ 56.30 ft. Angle = arctan(55/12) ≈ 77.7°.',
+    adequateMessage:'The 60 ft aerial ladder DOES reach. The rescue can proceed!'},
+];
+
+let solvedCount=0;
+const solvedSet={};
+
+function renderScenarios(){
+  const grid=document.getElementById('scenariosGrid');
+  grid.innerHTML='';
+  SCENARIOS.forEach(sc=>{
+    const card=document.createElement('div');
+    card.className='scenario-card';card.id=`sc-${sc.id}`;
+    card.innerHTML=`
+      <div class="scenario-header">
+        <span class="scenario-icon">${sc.icon}</span>
+        <div>
+          <span class="scenario-badge badge-${sc.badge}">${sc.badgeLabel}</span>
+          <div class="scenario-title">${sc.title}</div>
+        </div>
+      </div>
+      <p class="scenario-body">${sc.body}</p>
+      <div class="scenario-known">
+        <div class="known-title">Known Values</div>
+        <div class="known-row"><span>${sc.knownLabel1}</span><strong>${sc.knownVal1}</strong></div>
+        <div class="known-row"><span>${sc.knownLabel2}</span><strong>${sc.knownVal2}</strong></div>
+        <div class="known-row"><span>Available Ladder</span><strong>${sc.availableLadder} ft</strong></div>
+      </div>
+      <div class="sc-input-row">
+        <label class="sc-input-label" for="sc-len-${sc.id}">Required ladder length (ft)</label>
+        <input type="number" class="sc-input" id="sc-len-${sc.id}" placeholder="?" step="0.01" min="0"/>
+      </div>
+      <div class="sc-input-row">
+        <label class="sc-input-label" for="sc-ang-${sc.id}">Climb angle (°)</label>
+        <input type="number" class="sc-input" id="sc-ang-${sc.id}" placeholder="?" step="0.1" min="0" max="90"/>
+      </div>
+      <div class="sc-input-row" style="margin-bottom:1rem">
+        <label class="sc-input-label" for="sc-ade-${sc.id}">Does the available ladder reach?</label>
+        <select class="sc-input" id="sc-ade-${sc.id}" style="width:110px">
+          <option value="">—</option><option value="yes">Yes</option><option value="no">No</option>
+        </select>
+      </div>
+      <button class="sc-submit" onclick="checkScenario('${sc.id}')">Check My Answer</button>
+      <div class="sc-feedback" id="fb-${sc.id}"></div>`;
+    grid.appendChild(card);
+  });
+}
+
+function checkScenario(id){
+  const sc=SCENARIOS.find(s=>s.id===id);if(!sc)return;
+  const expLen=Math.sqrt(sc.h*sc.h+sc.b*sc.b);
+  const expDeg=Math.atan2(sc.h,sc.b)*180/Math.PI;
+  const expAde=expLen<=sc.availableLadder?'yes':'no';
+  const tol=sc.tolerancePct/100;
+
+  const lenIn=parseFloat(document.getElementById(`sc-len-${id}`).value);
+  const angIn=parseFloat(document.getElementById(`sc-ang-${id}`).value);
+  const adeIn=document.getElementById(`sc-ade-${id}`).value;
+
+  const lenOk=!isNaN(lenIn)&&Math.abs(lenIn-expLen)/expLen<=tol;
+  const angOk=!isNaN(angIn)&&Math.abs(angIn-expDeg)<=1.5;
+  const adeOk=adeIn===expAde;
+
+  document.getElementById(`sc-len-${id}`).className=`sc-input ${lenOk?'correct':(isNaN(lenIn)?'':'incorrect')}`;
+  document.getElementById(`sc-ang-${id}`).className=`sc-input ${angOk?'correct':(isNaN(angIn)?'':'incorrect')}`;
+  document.getElementById(`sc-ade-${id}`).className=`sc-input ${adeIn===''?'':(adeOk?'correct':'incorrect')}`;
+
+  const fb=document.getElementById(`fb-${id}`);
+  const card=document.getElementById(`sc-${id}`);
+  const all=lenOk&&angOk&&adeOk;
+  const any=lenOk||angOk||adeOk;
+
+  if(all){
+    fb.className='sc-feedback show pass';
+    fb.innerHTML=`<div class="feedback-header">✅ All correct! Mission success.</div>
+      Length: <strong>${expLen.toFixed(2)} ft</strong> &nbsp;|&nbsp; Angle: <strong>${expDeg.toFixed(1)}°</strong> (${expDeg>=70&&expDeg<=80?'✅ safe zone':'⚠️ outside safe zone'})<br>
+      ${expAde==='yes'?sc.adequateMessage:'⚠️ The '+sc.availableLadder+' ft ladder is NOT enough — need '+expLen.toFixed(2)+' ft minimum.'}<br><br>
+      <em>💡 ${sc.hint}</em>`;
+    card.className='scenario-card solved-pass';
+    if(!solvedSet[id]){solvedSet[id]=true;solvedCount++;updateProgress();}
+  } else if(any){
+    fb.className='sc-feedback show partial';
+    fb.innerHTML=`<div class="feedback-header">⚠️ Partially correct — keep going!</div>
+      ${lenOk?'✅ Length correct!':'❌ Length: use c = √(h²+d²) = √('+sc.h+'²+'+sc.b+'²)'}<br>
+      ${angOk?'✅ Angle correct!':'❌ Angle: use θ = arctan(h÷d) = arctan('+sc.h+'÷'+sc.b+')'}<br>
+      ${adeOk?'✅ Adequacy correct!':'❌ Adequacy: compare your length to the '+sc.availableLadder+' ft available'}`;
+  } else {
+    fb.className='sc-feedback show fail';
+    fb.innerHTML=`<div class="feedback-header">❌ Not quite — try again!</div>
+      Formula: <strong>c = √(h² + d²)</strong> &nbsp;&nbsp; Angle: <strong>θ = arctan(h ÷ d)</strong><br>
+      h = ${sc.h} ft &nbsp;&nbsp; d = ${sc.b} ft`;
+  }
+}
+
+function updateProgress(){
+  const pct=(solvedCount/SCENARIOS.length)*100;
+  document.getElementById('progressFill').style.width=pct+'%';
+  document.getElementById('progressCount').textContent=`${solvedCount} / ${SCENARIOS.length}`;
+}
+
+/* INIT */
+renderScenarios();
+updateExplore();
+</script>
+</body>
+</html>

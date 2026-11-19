@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interactive Quadratic Explorer</title>
+</head>
+<body style="font-family: Arial, Helvetica, sans-serif; max-width: 950px; margin: 0 auto; color: #222222; padding: 10px;">
+
+  <div style="background-color: #1a3c5e; color: #ffffff; padding: 16px 20px; border-radius: 6px 6px 0 0;">
+    <h1 style="margin: 0; font-size: 22px;">Interactive Quadratic Explorer</h1>
+    <p style="margin: 4px 0 0 0; font-size: 14px; color: #d6e6f2;">Adjust a, b, and c and watch the graph change. The grid automatically zooms out if your curve needs more room.</p>
+  </div>
+
+  <div style="border: 1px solid #cccccc; padding: 14px 18px; font-size: 18px; text-align: center; font-weight: bold; margin-top: 12px;">
+    f(x) = <span id="eqDisplay"></span>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 14px;">
+
+    <div style="flex: 1; min-width: 280px;">
+
+      <div style="border: 1px solid #cccccc; padding: 14px 18px; font-size: 14px; margin-bottom: 14px;">
+        <label style="display: block; margin-bottom: 14px;">
+          <strong>a = <span id="aVal"></span></strong><br>
+          <input id="aSlider" type="range" min="-1" max="1" step="0.005" value="1" style="width: 100%;">
+        </label>
+        <label style="display: block; margin-bottom: 14px;">
+          <strong>b = <span id="bVal"></span></strong><br>
+          <input id="bSlider" type="range" min="-10" max="10" step="0.1" value="0" style="width: 100%;">
+        </label>
+        <label style="display: block; margin-bottom: 0;">
+          <strong>c = <span id="cVal"></span></strong><br>
+          <input id="cSlider" type="range" min="-50" max="150" step="1" value="0" style="width: 100%;">
+        </label>
+      </div>
+
+      <div id="infoPanel" style="background-color: #eaf3fb; border-left: 4px solid #1a6fa3; padding: 12px 18px; font-size: 14px;">
+      </div>
+
+    </div>
+
+    <div style="flex: 1; min-width: 280px; text-align: center;">
+      <svg id="graph" viewBox="0 0 500 500" width="100%" height="auto" style="background-color: #ffffff; border: 1px solid #cccccc; max-width: 500px;"></svg>
+    </div>
+
+  </div>
+
+  <div style="background-color: #f0c040; color: #1a3c5e; padding: 12px 18px; margin-top: 14px; border-radius: 0 0 6px 6px; font-size: 14px;">
+    <strong>Try This:</strong>
+    <ul style="margin: 8px 0 0 18px;">
+      <li>Set b = 0 and c = 0. Slide a from negative to positive. What happens to the direction the graph opens? What happens to the width as |a| gets bigger or smaller?</li>
+      <li>Keep a and c fixed. Slide b back and forth. What happens to the vertex? Does the y-intercept ever change?</li>
+      <li>Keep a and b fixed. Slide c up and down. What part of the graph moves, and what stays the same?</li>
+      <li>Set a = 0. What kind of function do you get now? What do b and c represent in this case?</li>
+      <li>Can you find values of a, b, and c that give a graph with no x-intercepts? What does the discriminant look like in that case?</li>
+      <li>Try a small |a| (like -0.05) with a larger b and c, similar to the equations in your story problems. Notice how the grid zooms out automatically.</li>
+    </ul>
+  </div>
+
+<script>
+const svg = document.getElementById("graph");
+const W = 500, H = 500;
+const NS = "http://www.w3.org/2000/svg";
+
+let view = { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
+
+function pxX(x) { return (x - view.xMin) / (view.xMax - view.xMin) * W; }
+function pxY(y) { return H - (y - view.yMin) / (view.yMax - view.yMin) * H; }
+
+function formatNum(n) {
+  n = Math.round(n * 100) / 100;
+  return Number.isInteger(n) ? n.toString() : n.toFixed(2).replace(/\.?0+$/, "");
+}
+
+function buildEqString(a, b, c) {
+  let eq = "";
+  if (a !== 0) {
+    const aTerm = (Math.abs(a) === 1 ? "" : formatNum(Math.abs(a)));
+    eq += (a < 0 ? "-" : "") + aTerm + "x\u00B2";
+  }
+  if (b !== 0) {
+    const bTerm = (Math.abs(b) === 1 ? "" : formatNum(Math.abs(b)));
+    eq += (eq ? (b > 0 ? " + " : " - ") : (b < 0 ? "-" : "")) + bTerm + "x";
+  }
+  if (c !== 0 || eq === "") {
+    eq += (eq ? (c > 0 ? " + " : " - ") : (c < 0 ? "-" : "")) + formatNum(Math.abs(c));
+  }
+  return eq;
+}
+
+function niceStep(range) {
+  const candidates = [0.5, 1, 2, 5, 10, 20, 25, 50, 100, 200, 500, 1000];
+  for (const s of candidates) {
+    if (range / s <= 12) return s;
+  }
+  return candidates[candidates.length - 1];
+}
+
+// Compute a view that always includes the base [-10,10] x [-10,10] window,
+// but expands to fit the vertex, x-intercepts, and y-intercept if they fall outside it.
+function computeRange(a, b, c) {
+  let xMin = -10, xMax = 10, yMin = -10, yMax = 10;
+  const pts = [{ x: 0, y: c }];
+
+  if (a !== 0) {
+    const vx = -b / (2 * a), vy = a * vx * vx + b * vx + c;
+    pts.push({ x: vx, y: vy });
+    const disc = b * b - 4 * a * c;
+    if (disc >= 0) {
+      const r1 = (-b + Math.sqrt(disc)) / (2 * a);
+      const r2 = (-b - Math.sqrt(disc)) / (2 * a);
+      pts.push({ x: r1, y: 0 }, { x: r2, y: 0 });
+    }
+  } else if (b !== 0) {
+    pts.push({ x: -c / b, y: 0 });
+  }
+
+  pts.forEach(p => {
+    if (p.x < xMin) xMin = p.x;
+    if (p.x > xMax) xMax = p.x;
+    if (p.y < yMin) yMin = p.y;
+    if (p.y > yMax) yMax = p.y;
+  });
+
+  const xPad = (xMax - xMin) * 0.1;
+  const yPad = (yMax - yMin) * 0.1;
+  return { xMin: xMin - xPad, xMax: xMax + xPad, yMin: yMin - yPad, yMax: yMax + yPad };
+}
+
+function buildGrid() {
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  const bg = document.createElementNS(NS, "rect");
+  bg.setAttribute("x", 0); bg.setAttribute("y", 0);
+  bg.setAttribute("width", W); bg.setAttribute("height", H);
+  bg.setAttribute("fill", "#ffffff");
+  svg.appendChild(bg);
+
+  const xStep = niceStep(view.xMax - view.xMin);
+  const yStep = niceStep(view.yMax - view.yMin);
+
+  for (let gx = Math.ceil(view.xMin / xStep) * xStep; gx <= view.xMax + 1e-9; gx += xStep) {
+    const isAxis = Math.abs(gx) < 1e-9;
+    const line = document.createElementNS(NS, "line");
+    line.setAttribute("x1", pxX(gx)); line.setAttribute("x2", pxX(gx));
+    line.setAttribute("y1", 0); line.setAttribute("y2", H);
+    line.setAttribute("stroke", isAxis ? "#1a3c5e" : "#e0e0e0");
+    line.setAttribute("stroke-width", isAxis ? "2" : "1");
+    svg.appendChild(line);
+
+    if (!isAxis || view.xMin < 0) {
+      const t = document.createElementNS(NS, "text");
+      t.setAttribute("x", pxX(gx) + 2);
+      t.setAttribute("y", (view.yMin <= 0 && 0 <= view.yMax) ? pxY(0) + 12 : H - 4);
+      t.setAttribute("font-size", "10"); t.setAttribute("fill", "#666666");
+      t.textContent = formatNum(gx);
+      svg.appendChild(t);
+    }
+  }
+
+  for (let gy = Math.ceil(view.yMin / yStep) * yStep; gy <= view.yMax + 1e-9; gy += yStep) {
+    const isAxis = Math.abs(gy) < 1e-9;
+    const line = document.createElementNS(NS, "line");
+    line.setAttribute("x1", 0); line.setAttribute("x2", W);
+    line.setAttribute("y1", pxY(gy)); line.setAttribute("y2", pxY(gy));
+    line.setAttribute("stroke", isAxis ? "#1a3c5e" : "#e0e0e0");
+    line.setAttribute("stroke-width", isAxis ? "2" : "1");
+    svg.appendChild(line);
+
+    if (!isAxis) {
+      const t = document.createElementNS(NS, "text");
+      t.setAttribute("x", 2); t.setAttribute("y", pxY(gy) - 2);
+      t.setAttribute("font-size", "10"); t.setAttribute("fill", "#666666");
+      t.textContent = formatNum(gy);
+      svg.appendChild(t);
+    }
+  }
+
+  const border = document.createElementNS(NS, "rect");
+  border.setAttribute("x", 0); border.setAttribute("y", 0);
+  border.setAttribute("width", W); border.setAttribute("height", H);
+  border.setAttribute("fill", "none"); border.setAttribute("stroke", "#999999");
+  svg.appendChild(border);
+}
+
+// Persistent overlay elements (re-appended after each grid rebuild)
+const curvePath = document.createElementNS(NS, "path");
+curvePath.setAttribute("fill", "none");
+curvePath.setAttribute("stroke", "#1a6fa3");
+curvePath.setAttribute("stroke-width", "3");
+
+const axisLine = document.createElementNS(NS, "line");
+axisLine.setAttribute("stroke", "#f0c040");
+axisLine.setAttribute("stroke-width", "2");
+axisLine.setAttribute("stroke-dasharray", "6,4");
+
+function makePoint(color) {
+  const c = document.createElementNS(NS, "circle");
+  c.setAttribute("r", "5");
+  c.setAttribute("fill", color);
+  c.setAttribute("stroke", "#ffffff");
+  c.setAttribute("stroke-width", "1.5");
+  return c;
+}
+
+const vertexPoint = makePoint("#e8772e");
+const yIntPoint = makePoint("#1a3c5e");
+const xInt1 = makePoint("#2e8b57");
+const xInt2 = makePoint("#2e8b57");
+
+function drawCurve(a, b, c) {
+  let d = "";
+  let prevX = null, prevY = null, prevIn = null;
+  const step = (view.xMax - view.xMin) / 300;
+
+  for (let x = view.xMin; x <= view.xMax + 1e-9; x += step) {
+    const y = a * x * x + b * x + c;
+    const inRange = (y >= view.yMin && y <= view.yMax);
+
+    if (inRange) {
+      if (prevIn === false) {
+        const boundary = (prevY > view.yMax) ? view.yMax : view.yMin;
+        const t = (boundary - prevY) / (y - prevY);
+        const cx = prevX + t * (x - prevX);
+        d += "M " + pxX(cx).toFixed(2) + " " + pxY(boundary).toFixed(2) + " ";
+      } else if (prevIn === null) {
+        d += "M " + pxX(x).toFixed(2) + " " + pxY(y).toFixed(2) + " ";
+        prevX = x; prevY = y; prevIn = true;
+        continue;
+      }
+      d += "L " + pxX(x).toFixed(2) + " " + pxY(y).toFixed(2) + " ";
+    } else if (prevIn === true) {
+      const boundary = (y > view.yMax) ? view.yMax : view.yMin;
+      const t = (boundary - prevY) / (y - prevY);
+      const cx = prevX + t * (x - prevX);
+      d += "L " + pxX(cx).toFixed(2) + " " + pxY(boundary).toFixed(2) + " ";
+    }
+
+    prevX = x; prevY = y; prevIn = inRange;
+  }
+  curvePath.setAttribute("d", d);
+}
+
+function update() {
+  const a = Math.round(parseFloat(document.getElementById("aSlider").value) * 1000) / 1000;
+  const b = Math.round(parseFloat(document.getElementById("bSlider").value) * 100) / 100;
+  const c = Math.round(parseFloat(document.getElementById("cSlider").value) * 100) / 100;
+
+  document.getElementById("aVal").textContent = formatNum(a);
+  document.getElementById("bVal").textContent = formatNum(b);
+  document.getElementById("cVal").textContent = formatNum(c);
+
+  document.getElementById("eqDisplay").textContent = buildEqString(a, b, c);
+
+  view = computeRange(a, b, c);
+
+  buildGrid();
+  svg.appendChild(curvePath);
+  svg.appendChild(axisLine);
+  svg.appendChild(yIntPoint);
+  svg.appendChild(vertexPoint);
+  svg.appendChild(xInt1);
+  svg.appendChild(xInt2);
+
+  drawCurve(a, b, c);
+
+  yIntPoint.setAttribute("cx", pxX(0));
+  yIntPoint.setAttribute("cy", pxY(c));
+  yIntPoint.style.display = "block";
+
+  let info = "";
+
+  if (a !== 0) {
+    const h = -b / (2 * a);
+    const k = a * h * h + b * h + c;
+    const disc = b * b - 4 * a * c;
+
+    vertexPoint.setAttribute("cx", pxX(h));
+    vertexPoint.setAttribute("cy", pxY(k));
+    vertexPoint.style.display = "block";
+
+    axisLine.setAttribute("x1", pxX(h)); axisLine.setAttribute("x2", pxX(h));
+    axisLine.setAttribute("y1", 0); axisLine.setAttribute("y2", H);
+    axisLine.style.display = "block";
+
+    let xIntText = "none (no real zeros)";
+    if (disc > 0) {
+      const r1 = (-b + Math.sqrt(disc)) / (2 * a);
+      const r2 = (-b - Math.sqrt(disc)) / (2 * a);
+      xIntText = formatNum(r1) + " and " + formatNum(r2);
+      [r1, r2].forEach((r, idx) => {
+        const pt = idx === 0 ? xInt1 : xInt2;
+        pt.setAttribute("cx", pxX(r));
+        pt.setAttribute("cy", pxY(0));
+        pt.style.display = "block";
+      });
+    } else if (disc === 0) {
+      const r = -b / (2 * a);
+      xIntText = formatNum(r) + " (repeated)";
+      xInt1.setAttribute("cx", pxX(r));
+      xInt1.setAttribute("cy", pxY(0));
+      xInt1.style.display = "block";
+      xInt2.style.display = "none";
+    } else {
+      xInt1.style.display = "none";
+      xInt2.style.display = "none";
+    }
+
+    info += "<strong>a = " + formatNum(a) + ":</strong> graph opens " + (a > 0 ? "up (concave up)" : "down (concave down)") +
+            ". " + (Math.abs(a) > 1 ? "Larger |a| makes it narrower." : (Math.abs(a) < 1 ? "Smaller |a| makes it wider." : "Standard width.")) + "<br><br>";
+    info += "<strong>Vertex:</strong> (" + formatNum(h) + ", " + formatNum(k) + ")<br>";
+    info += "<strong>Axis of symmetry:</strong> x = " + formatNum(h) + "<br>";
+    info += "<strong>" + (a > 0 ? "Minimum" : "Maximum") + " value:</strong> " + formatNum(k) + "<br><br>";
+    info += "<strong>y-intercept:</strong> (0, " + formatNum(c) + ")<br>";
+    info += "<strong>Discriminant:</strong> b\u00B2 - 4ac = " + formatNum(disc) + "<br>";
+    info += "<strong>x-intercepts:</strong> " + xIntText;
+
+  } else {
+    vertexPoint.style.display = "none";
+    axisLine.style.display = "none";
+    xInt2.style.display = "none";
+
+    if (b !== 0) {
+      const root = -c / b;
+      xInt1.setAttribute("cx", pxX(root));
+      xInt1.setAttribute("cy", pxY(0));
+      xInt1.style.display = "block";
+
+      info += "<strong>a = 0:</strong> this is no longer quadratic \u2014 it's a linear function, f(x) = " + buildEqString(0, b, c) + ".<br><br>";
+      info += "<strong>Slope:</strong> " + formatNum(b) + " (" + (b > 0 ? "increasing" : "decreasing") + ")<br>";
+      info += "<strong>y-intercept:</strong> (0, " + formatNum(c) + ")<br>";
+      info += "<strong>x-intercept:</strong> " + formatNum(root);
+    } else {
+      xInt1.style.display = "none";
+      info += "<strong>a = 0 and b = 0:</strong> this is a constant function, f(x) = " + formatNum(c) + ". The graph is a horizontal line through y = " + formatNum(c) + ".";
+    }
+  }
+
+  document.getElementById("infoPanel").innerHTML = info;
+}
+
+["aSlider", "bSlider", "cSlider"].forEach(id => {
+  document.getElementById(id).addEventListener("input", update);
+});
+
+update();
+</script>
+
+</body>
+</html>

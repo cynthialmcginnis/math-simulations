@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Water Balloon Launch Simulator</title>
+<style>
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f4f6f8;
+    padding: 24px;
+    color: #1a1a1a;
+  }
+  .container {
+    max-width: 1080px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  h2 { margin-top: 0; color: #1a3c5e; }
+
+  .level-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+    border-bottom: 2px solid #EAF2F8;
+  }
+  .level-tab {
+    background: none;
+    border: none;
+    padding: 10px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+  }
+  .level-tab.active { color: #1a3c5e; border-bottom-color: #1a6fa3; }
+  .level-tab:hover { color: #1a6fa3; background: none; }
+  @media (max-width: 600px) { body { padding: 8px; } .container { padding: 14px; } .level-tab { padding: 8px 10px; font-size: 14px; } .control-group { min-width: 140px; } }
+
+  .equation-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .equation {
+    font-size: 18px;
+    font-weight: 600;
+    background: #EAF2F8;
+    color: #1a3c5e;
+    padding: 10px 14px;
+    border-radius: 8px;
+  }
+  .math-connection {
+    font-size: 13px;
+    background: #fff8e6;
+    border: 1px solid #F0C040;
+    color: #7a5c00;
+    padding: 8px 12px;
+    border-radius: 8px;
+    flex: 1;
+    min-width: 260px;
+  }
+  .controls {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .control-group { flex: 1; min-width: 220px; }
+  .control-group label {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #1a3c5e;
+  }
+  input[type="range"] { width: 100%; accent-color: #1a6fa3; }
+  input[type="range"]:disabled { opacity: 0.5; }
+  input[type="number"] {
+    width: 100%;
+    padding: 9px 10px;
+    font-size: 15px;
+    border: 1px solid #c9d6e0;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-family: inherit;
+  }
+  input[type="number"]:disabled { opacity: 0.5; background: #f4f6f8; }
+
+  .canvas-wrap {
+    background: linear-gradient(to bottom, #cde9ff 0%, #eaf6ff 70%, #eaf6ff 100%);
+    border-radius: 8px;
+    border: 1px solid #d0d7de;
+    overflow: hidden;
+  }
+  canvas {
+    width: 100%;
+    display: block;
+  }
+  .btn-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  button {
+    background: #1a6fa3;
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { background: #14587f; }
+  button:disabled { background: #a9c7d8; cursor: not-allowed; }
+  button.secondary { background: #e5e7eb; color: #1a1a1a; }
+  button.secondary:hover { background: #d1d5db; }
+  #status {
+    text-align: center;
+    margin-top: 12px;
+    font-weight: 600;
+    font-size: 16px;
+    min-height: 24px;
+  }
+  .hit { color: #16a34a; }
+  .miss { color: #dc2626; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Water Balloon Launch Simulator</h2>
+
+  <div class="level-tabs">
+    <button class="level-tab active" id="tab1" type="button">Level 1 &middot; Explore</button>
+    <button class="level-tab" id="tab2" type="button">Level 2 &middot; Find the Equation</button>
+  </div>
+
+  <!-- LEVEL 1 -->
+  <div id="level1Controls">
+    <div class="equation-row">
+      <div class="equation" id="equation">h(x) = 0.00x&sup2; + 0.00x</div>
+      <div class="math-connection" id="mathConnection"></div>
+    </div>
+    <div class="controls">
+      <div class="control-group">
+        <label>Launch Angle <span id="angleVal">45&deg;</span></label>
+        <input type="range" id="angle" min="1" max="89" value="45">
+      </div>
+      <div class="control-group">
+        <label>Initial Velocity <span id="velVal">50 m/s</span></label>
+        <input type="range" id="velocity" min="10" max="100" value="50">
+      </div>
+      <div class="control-group">
+        <label>Starting Height <span id="heightVal">0 m (ground)</span></label>
+        <input type="range" id="startHeight" min="0" max="60" step="5" value="0">
+      </div>
+    </div>
+  </div>
+
+  <!-- LEVEL 2 -->
+  <div id="level2Controls" style="display:none;">
+    <div class="equation-row">
+      <div class="equation" id="level2Title">Find the equation of the parabola shown below</div>
+      <div class="math-connection" id="level2Hint">Use the marked x-intercepts, y-intercept, vertex, and extra point to find <strong>a</strong> and <strong>b</strong> for h(x) = ax&sup2; + bx + c, then test your equation.</div>
+    </div>
+    <div class="controls">
+      <div class="control-group">
+        <label>Your value of a</label>
+        <input type="number" id="studentA" step="any" placeholder="e.g. -0.04">
+      </div>
+      <div class="control-group">
+        <label>Your value of b</label>
+        <input type="number" id="studentB" step="any" placeholder="e.g. 1.4">
+      </div>
+    </div>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="canvas" width="1000" height="560"></canvas>
+  </div>
+  <div id="status"></div>
+
+  <div class="btn-row" id="level1Buttons">
+    <button id="launchBtn" type="button">Launch Water Balloon</button>
+    <button id="resetBtn" class="secondary" type="button">New Target</button>
+  </div>
+  <div class="btn-row" id="level2Buttons" style="display:none;">
+    <button id="testBtn" type="button">Test My Equation</button>
+    <button id="newProblemBtn" class="secondary" type="button">New Problem</button>
+    <button id="revealBtn" class="secondary" type="button" style="display:none;">Reveal Correct a &amp; b</button>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+// Level 1 elements
+const angleSlider = document.getElementById('angle');
+const velSlider = document.getElementById('velocity');
+const heightSlider = document.getElementById('startHeight');
+const angleVal = document.getElementById('angleVal');
+const velVal = document.getElementById('velVal');
+const heightVal = document.getElementById('heightVal');
+const equationEl = document.getElementById('equation');
+const mathConnectionEl = document.getElementById('mathConnection');
+const launchBtn = document.getElementById('launchBtn');
+const resetBtn = document.getElementById('resetBtn');
+
+// Level 2 elements
+const level2HintEl = document.getElementById('level2Hint');
+const studentAInput = document.getElementById('studentA');
+const studentBInput = document.getElementById('studentB');
+const testBtn = document.getElementById('testBtn');
+const newProblemBtn = document.getElementById('newProblemBtn');
+const revealBtn = document.getElementById('revealBtn');
+
+// Shared
+const statusEl = document.getElementById('status');
+const level1Controls = document.getElementById('level1Controls');
+const level2Controls = document.getElementById('level2Controls');
+const level1Buttons = document.getElementById('level1Buttons');
+const level2Buttons = document.getElementById('level2Buttons');
+const tab1 = document.getElementById('tab1');
+const tab2 = document.getElementById('tab2');
+
+const GRAVITY = 9.81;
+const W = canvas.width, H = canvas.height;
+function k() { return Math.max(1, (W / (canvas.clientWidth || W)) * 0.8); }
+function font(weight, n) { return `${weight ? weight + ' ' : ''}${Math.round(n * k())}px sans-serif`; }
+const MARGIN = { left: 55, right: 25, top: 25, bottom: 45 };
+const plotW = W - MARGIN.left - MARGIN.right;
+const plotH = H - MARGIN.top - MARGIN.bottom;
+const groundPx = H - MARGIN.bottom;
+
+let currentLevel = 1;
+let launched = false;
+let animId = null;
+let trail = [];
+let splashParticles = [];
+
+// ---------- Level 1 state ----------
+let angle = 45;
+let velocity = 50;
+let startHeight = 0;
+let target = { xMeters: 60 };
+
+// ---------- Level 2 state ----------
+let problem2 = null;
+
+// ---------- Shared math helpers ----------
+function niceStep(maxValue, targetTicks) {
+  const rough = maxValue / targetTicks;
+  const mag = Math.pow(10, Math.floor(Math.log10(rough || 1)));
+  const norm = rough / mag;
+  let step;
+  if (norm < 1.5) step = 1;
+  else if (norm < 3) step = 2;
+  else if (norm < 7) step = 5;
+  else step = 10;
+  return step * mag;
+}
+
+function formatNum(n) {
+  return Math.abs(n - Math.round(n)) < 0.01 ? Math.round(n).toString() : n.toFixed(1);
+}
+
+function solvePhysics(angleDeg, v0, c) {
+  const rad = (angleDeg * Math.PI) / 180;
+  const v0x = v0 * Math.cos(rad);
+  const v0y = v0 * Math.sin(rad);
+  const tLand = (v0y + Math.sqrt(v0y * v0y + 2 * GRAVITY * c)) / GRAVITY;
+  const R = v0x * tLand;
+  const Hmax = c + (v0y * v0y) / (2 * GRAVITY);
+  const a = -GRAVITY / (2 * v0x * v0x);
+  const b = v0y / v0x;
+  return { v0x, v0y, c, R, Hmax, a, b };
+}
+
+// physics: {a,b,c,R,Hmax[,v0x,v0y]}. targetX: rightmost x of interest. xMin: optional left edge (default 0).
+function buildView(physics, targetX, xMin) {
+  xMin = xMin || 0;
+  const rawRight = Math.max(physics.R, targetX, 20);
+  const xMax = rawRight * 1.15;
+  const totalXRange = xMax - xMin;
+  const yMax = Math.max(physics.Hmax, 8) * 1.35;
+  const scaleX = plotW / totalXRange;
+  const scaleY = plotH / yMax;
+  const xStep = niceStep(totalXRange, 8);
+  const yStep = niceStep(yMax, 6);
+  return { ...physics, xMin, xMax, yMax, scaleX, scaleY, xStep, yStep };
+}
+
+function pxX(xMeters, view) { return MARGIN.left + (xMeters - (view.xMin || 0)) * view.scaleX; }
+function pxY(yMeters, view) { return groundPx - yMeters * view.scaleY; }
+
+function randomTargetX(R, minX) {
+  minX = minX || 15;
+  const upper = Math.max(minX + 25, R * 0.9);
+  return Math.round(minX + Math.random() * (upper - minX));
+}
+
+// ---------- Shared drawing ----------
+function drawGrid(view) {
+  ctx.clearRect(0, 0, W, H);
+
+  ctx.fillStyle = '#8fd18f';
+  ctx.fillRect(MARGIN.left, groundPx, plotW, H - groundPx);
+
+  const xMin = view.xMin || 0;
+  const startX = Math.floor(xMin / view.xStep) * view.xStep;
+  for (let gx = startX; gx <= view.xMax; gx += view.xStep) {
+    if (gx < xMin - 1e-6) continue;
+    const px = pxX(gx, view);
+    const isAxis = Math.abs(gx) < 1e-6;
+    ctx.strokeStyle = isAxis ? '#1a3c5e' : '#c9d6e0';
+    ctx.lineWidth = isAxis ? 2 : 1;
+    ctx.beginPath();
+    ctx.moveTo(px, MARGIN.top);
+    ctx.lineTo(px, groundPx);
+    ctx.stroke();
+
+    ctx.fillStyle = '#4a5a68';
+    ctx.font = font('', 11);
+    ctx.textAlign = 'center';
+    ctx.fillText(formatNum(gx), px, groundPx + 16 * k());
+  }
+
+  for (let gy = 0; gy <= view.yMax; gy += view.yStep) {
+    const py = pxY(gy, view);
+    const isAxis = gy === 0;
+    ctx.strokeStyle = isAxis ? '#1a3c5e' : '#c9d6e0';
+    ctx.lineWidth = isAxis ? 2 : 1;
+    ctx.beginPath();
+    ctx.moveTo(MARGIN.left, py);
+    ctx.lineTo(W - MARGIN.right, py);
+    ctx.stroke();
+
+    if (!isAxis) {
+      ctx.fillStyle = '#4a5a68';
+      ctx.font = font('', 11);
+      ctx.textAlign = 'right';
+      ctx.fillText(formatNum(gy), MARGIN.left - 8, py + 4);
+    }
+  }
+
+  ctx.strokeStyle = '#8fa3b3';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(MARGIN.left, MARGIN.top, plotW, plotH);
+
+  ctx.fillStyle = '#1a3c5e';
+  ctx.font = font('600', 12);
+  ctx.textAlign = 'center';
+  ctx.fillText('Distance (m)', MARGIN.left + plotW / 2, H - 8);
+  ctx.save();
+  ctx.translate(14, MARGIN.top + plotH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('Height (m)', 0, 0);
+  ctx.restore();
+}
+
+function drawTrajectoryPath(view) {
+  ctx.strokeStyle = 'rgba(26,111,163,0.4)';
+  ctx.setLineDash([5, 5]);
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  let first = true;
+  const step = view.R / 200 || 1;
+  for (let x = 0; x <= view.R; x += step) {
+    const y = view.a * x * x + view.b * x + view.c;
+    if (y < 0) break;
+    const px = pxX(x, view), py = pxY(y, view);
+    if (first) { ctx.moveTo(px, py); first = false; }
+    else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function drawPlatform(view) {
+  if (view.c <= 0) return;
+  const x0 = pxX(0, view);
+  const topY = pxY(view.c, view);
+  const baseY = groundPx;
+  const halfWidth = 34;
+
+  ctx.fillStyle = '#9ca3af';
+  ctx.fillRect(x0 - halfWidth, topY, halfWidth * 2, baseY - topY);
+  ctx.strokeStyle = '#6b7280';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x0 - halfWidth, topY, halfWidth * 2, baseY - topY);
+
+  ctx.strokeStyle = '#6b7280';
+  ctx.beginPath();
+  ctx.moveTo(x0 - halfWidth, topY);
+  ctx.lineTo(x0 + halfWidth, baseY);
+  ctx.moveTo(x0 + halfWidth, topY);
+  ctx.lineTo(x0 - halfWidth, baseY);
+  ctx.stroke();
+
+  ctx.fillStyle = '#4b5563';
+  ctx.fillRect(x0 - halfWidth - 6, topY - 6, halfWidth * 2 + 12, 6);
+
+  ctx.fillStyle = '#1a3c5e';
+  ctx.font = font('600', 11);
+  ctx.textAlign = 'center';
+  ctx.fillText(`${formatNum(view.c)} m platform`, x0, topY - 12);
+}
+
+function drawLauncher(view, angleDeg) {
+  const originX = pxX(0, view);
+  const originY = pxY(view.c, view);
+  const rad = (angleDeg * Math.PI) / 180;
+
+  ctx.save();
+  ctx.translate(originX, originY);
+
+  ctx.fillStyle = '#4b5563';
+  ctx.beginPath();
+  ctx.arc(0, 0, 10, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillRect(-4, 0, 8, 14);
+
+  ctx.rotate(-rad);
+  ctx.fillStyle = '#6b7280';
+  ctx.strokeStyle = '#374151';
+  ctx.lineWidth = 1.5;
+  const barrelLen = 46;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(0, -7, barrelLen, 14, 6); else ctx.rect(0, -7, barrelLen, 14);
+  ctx.fill();
+  ctx.stroke();
+
+  if (!launched) {
+    drawBalloonShape(barrelLen - 4, 0, 10, 0);
+  }
+  ctx.restore();
+}
+
+function drawBalloonShape(cx, cy, r, wobble) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(wobble);
+
+  const grad = ctx.createRadialGradient(-r * 0.35, -r * 0.35, r * 0.15, 0, 0, r * 1.15);
+  grad.addColorStop(0, '#ff9fb3');
+  grad.addColorStop(0.55, '#ef5777');
+  grad.addColorStop(1, '#c0392b');
+
+  ctx.beginPath();
+  ctx.moveTo(0, -r);
+  ctx.bezierCurveTo(r * 1.05, -r, r * 1.05, r * 0.75, 0, r * 1.05);
+  ctx.bezierCurveTo(-r * 1.05, r * 0.75, -r * 1.05, -r, 0, -r);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(120,20,40,0.5)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.18, r * 1.0);
+  ctx.lineTo(r * 0.18, r * 1.0);
+  ctx.lineTo(0, r * 1.25);
+  ctx.closePath();
+  ctx.fillStyle = '#8e2a3d';
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.35, -r * 0.35, r * 0.28, r * 0.16, -0.6, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawTargetMarker(view, targetX) {
+  const px = pxX(targetX, view);
+  const py = groundPx;
+
+  ctx.strokeStyle = 'rgba(220,38,38,0.45)';
+  ctx.setLineDash([3, 4]);
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(px, MARGIN.top);
+  ctx.lineTo(px, py);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.beginPath();
+  ctx.arc(px, py - 4, 13, 0, Math.PI * 2);
+  ctx.fillStyle = '#ef4444';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(px, py - 4, 8, 0, Math.PI * 2);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(px, py - 4, 3.5, 0, Math.PI * 2);
+  ctx.fillStyle = '#ef4444';
+  ctx.fill();
+
+  ctx.fillStyle = '#7f1d1d';
+  ctx.font = font('600', 12);
+  ctx.textAlign = 'center';
+  ctx.fillText(`Target: ${targetX} m`, px, py - 24);
+}
+
+function drawTrail() {
+  for (let i = 0; i < trail.length; i++) {
+    const p = trail[i];
+    const alpha = (i + 1) / trail.length * 0.35;
+    ctx.beginPath();
+    ctx.arc(p.px, p.py, 4, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(70,150,220,${alpha})`;
+    ctx.fill();
+  }
+}
+
+function drawSplash() {
+  for (const p of splashParticles) {
+    ctx.beginPath();
+    ctx.arc(p.px, p.py, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(70,150,220,${p.alpha})`;
+    ctx.fill();
+  }
+}
+
+function spawnSplash(px, py) {
+  splashParticles = [];
+  const count = 12;
+  for (let i = 0; i < count; i++) {
+    const a = (Math.PI / count) * i - Math.PI / 2 + (Math.random() - 0.5) * 0.3;
+    const speed = 2.5 + Math.random() * 3.5;
+    splashParticles.push({
+      px, py,
+      vx: Math.cos(a) * speed,
+      vy: -Math.abs(Math.sin(a) * speed) - 1,
+      r: 3 + Math.random() * 2,
+      alpha: 0.85
+    });
+  }
+}
+
+function stepSplash() {
+  let alive = false;
+  for (const p of splashParticles) {
+    p.vy += 0.35;
+    p.px += p.vx;
+    p.py += p.vy;
+    p.alpha -= 0.035;
+    if (p.alpha > 0 && p.py < groundPx + 10) alive = true;
+  }
+  return alive;
+}
+
+// ============ LEVEL 1 ============
+function computeView() {
+  const physics = solvePhysics(angle, velocity, startHeight);
+  return buildView(physics, target.xMeters);
+}
+
+function updateEquation(view) {
+  const cTerm = view.c > 0 ? ` + ${view.c.toFixed(1)}` : '';
+  equationEl.textContent = `h(x) = ${view.a.toFixed(4)}x² + ${view.b.toFixed(3)}x${cTerm}`;
+  const vertexX = -view.b / (2 * view.a);
+
+  let landingNote;
+  if (view.c === 0) {
+    landingNote = `lands at x = &minus;b/a &asymp; ${formatNum(view.R)} m`;
+  } else {
+    landingNote = `starts at height c = ${formatNum(view.c)} m, lands at x &asymp; ${formatNum(view.R)} m ` +
+      `(the positive root of ax&sup2;+bx+c=0: quadratic formula)`;
+  }
+
+  mathConnectionEl.innerHTML =
+    `<strong>Math connection:</strong> ${landingNote} &nbsp;|&nbsp; ` +
+    `max height at x = &minus;b/(2a) &asymp; ${formatNum(vertexX)} m, h &asymp; ${formatNum(view.Hmax)} m`;
+}
+
+function setLevel1ControlsDisabled(disabled) {
+  launchBtn.disabled = disabled;
+  angleSlider.disabled = disabled;
+  velSlider.disabled = disabled;
+  heightSlider.disabled = disabled;
+}
+
+function drawLevel1Scene(view, balloonState) {
+  drawGrid(view);
+  drawTrajectoryPath(view);
+  drawTargetMarker(view, target.xMeters);
+  drawPlatform(view);
+  drawLauncher(view, angle);
+  drawTrail();
+  drawSplash();
+  if (balloonState) drawBalloonShape(balloonState.px, balloonState.py, 10 * k(), balloonState.wobble);
+}
+
+function refresh() {
+  const view = computeView();
+  updateEquation(view);
+  trail = [];
+  drawLevel1Scene(view, null);
+}
+
+function launch() {
+  if (launched) return;
+  launched = true;
+  setLevel1ControlsDisabled(true);
+  statusEl.textContent = '';
+  statusEl.className = '';
+  trail = [];
+  splashParticles = [];
+
+  const view = computeView();
+  updateEquation(view);
+  let t = 0;
+  const dt = 0.018;
+
+  function step() {
+    const xMeters = view.v0x * t;
+    const yMeters = view.c + view.v0y * t - 0.5 * GRAVITY * t * t;
+    const px = pxX(xMeters, view);
+    const py = pxY(Math.max(yMeters, 0), view);
+
+    trail.push({ px, py });
+    if (trail.length > 10) trail.shift();
+
+    const wobble = t * 6;
+    drawLevel1Scene(view, { px, py, wobble });
+
+    if ((yMeters <= 0 && t > 0.05) || px > W) {
+      finishFlight(view, xMeters, px, py);
+      return;
+    }
+
+    t += dt;
+    animId = requestAnimationFrame(step);
+  }
+
+  step();
+}
+
+function finishFlight(view, xMeters, px, py) {
+  spawnSplash(px, groundPx);
+
+  function splashFrame() {
+    const alive = stepSplash();
+    drawLevel1Scene(view, null);
+    if (alive) {
+      animId = requestAnimationFrame(splashFrame);
+    } else {
+      splashParticles = [];
+      drawLevel1Scene(view, null);
+    }
+  }
+  splashFrame();
+
+  launched = false;
+  setLevel1ControlsDisabled(false);
+
+  const tolerance = Math.max(2, view.xMax * 0.02);
+  const distance = Math.abs(xMeters - target.xMeters);
+  if (distance <= tolerance) {
+    statusEl.textContent = `Hit! Landed at ${formatNum(xMeters)} m (target was at ${target.xMeters} m).`;
+    statusEl.className = 'hit';
+  } else {
+    statusEl.textContent = `Missed by ${formatNum(distance)} m. Balloon landed at ${formatNum(xMeters)} m, target was at ${target.xMeters} m.`;
+    statusEl.className = 'miss';
+  }
+}
+
+angleSlider.addEventListener('input', () => {
+  angle = parseFloat(angleSlider.value);
+  angleVal.textContent = angle + '°';
+  if (!launched) refresh();
+});
+
+velSlider.addEventListener('input', () => {
+  velocity = parseFloat(velSlider.value);
+  velVal.textContent = velocity + ' m/s';
+  if (!launched) refresh();
+});
+
+heightSlider.addEventListener('input', () => {
+  startHeight = parseFloat(heightSlider.value);
+  heightVal.textContent = startHeight === 0 ? '0 m (ground)' : startHeight + ' m (platform)';
+  if (!launched) refresh();
+});
+
+launchBtn.addEventListener('click', launch);
+
+resetBtn.addEventListener('click', () => {
+  if (animId) cancelAnimationFrame(animId);
+  launched = false;
+  setLevel1ControlsDisabled(false);
+  statusEl.textContent = '';
+  splashParticles = [];
+  const physics = solvePhysics(angle, velocity, startHeight);
+  target.xMeters = randomTargetX(physics.R);
+  refresh();
+});
+
+// ============ LEVEL 2 (read the graph) ============
+const level2Templates = [
+  { r1: -10, r2: 60, aLead: -0.04 },
+  { r1: -20, r2: 80, aLead: -0.02 },
+  { r1: -15, r2: 45, aLead: -0.05 },
+  { r1: -10, r2: 90, aLead: -0.02 },
+  { r1: -20, r2: 40, aLead: -0.06 },
+  { r1: -10, r2: 50, aLead: -0.04 },
+  { r1: -25, r2: 65, aLead: -0.03 },
+  { r1: -15, r2: 75, aLead: -0.025 }
+];
+
+function makeLevel2Problem() {
+  const t = level2Templates[Math.floor(Math.random() * level2Templates.length)];
+  const { r1, r2, aLead } = t;
+  const A = aLead;
+  const B = -aLead * (r1 + r2);
+  const C = aLead * r1 * r2;
+  const vertexX = (r1 + r2) / 2;
+  const vertexY = -aLead * Math.pow((r2 - r1) / 2, 2);
+
+  const span = r2 - r1;
+  const side = Math.random() < 0.5 ? -1 : 1;
+  const offset = Math.round(((0.2 + Math.random() * 0.25) * span) / 5) * 5;
+  let extraX = Math.round((vertexX + side * offset) / 5) * 5;
+  extraX = Math.max(r1 + 5, Math.min(r2 - 5, extraX));
+  if (Math.round(extraX) === Math.round(vertexX)) extraX += 5;
+  const extraY = A * extraX * extraX + B * extraX + C;
+
+  return { r1, r2, A, B, C, vertexX, vertexY, extraX, extraY };
+}
+
+function buildLevel2View(p) {
+  const physics = { a: p.A, b: p.B, c: p.C, R: p.r2, Hmax: p.vertexY };
+  const xMin = Math.min(p.r1, 0) - 10;
+  return buildView(physics, p.r2, xMin);
+}
+
+function drawFeaturePoint(view, x, y, label, color) {
+  const px = pxX(x, view), py = pxY(y, view);
+  ctx.beginPath();
+  ctx.arc(px, py, 5 * k(), 0, Math.PI * 2);
+  ctx.fillStyle = color || '#1a3c5e';
+  ctx.fill();
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.fillStyle = '#1a3c5e';
+  ctx.font = font('600', 11);
+  ctx.textAlign = 'center';
+  ctx.fillText(label, px, py - 12);
+}
+
+function drawLevel2Graph(view, p) {
+  ctx.strokeStyle = '#1a6fa3';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  let first = true;
+  const step = (p.r2 - p.r1) / 200;
+  for (let x = p.r1; x <= p.r2; x += step) {
+    const y = p.A * x * x + p.B * x + p.C;
+    const px = pxX(x, view), py = pxY(Math.max(y, 0), view);
+    if (first) { ctx.moveTo(px, py); first = false; }
+    else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  drawFeaturePoint(view, p.r1, 0, `(${formatNum(p.r1)}, 0)`);
+  drawFeaturePoint(view, p.r2, 0, `(${formatNum(p.r2)}, 0)`);
+  drawFeaturePoint(view, 0, p.C, `(0, ${formatNum(p.C)})`);
+  drawFeaturePoint(view, p.vertexX, p.vertexY, `(${formatNum(p.vertexX)}, ${formatNum(p.vertexY)})`, '#F0C040');
+  drawFeaturePoint(view, p.extraX, p.extraY, `(${formatNum(p.extraX)}, ${formatNum(p.extraY)})`, '#c0392b');
+}
+
+function drawLevel2Scene(view, balloonState) {
+  drawGrid(view);
+  drawLevel2Graph(view, problem2);
+  drawPlatform(view);
+  drawLauncher(view, 40);
+  drawTrail();
+  drawSplash();
+  if (balloonState) drawBalloonShape(balloonState.px, balloonState.py, 10 * k(), balloonState.wobble);
+}
+
+function setLevel2ControlsDisabled(disabled) {
+  testBtn.disabled = disabled;
+  newProblemBtn.disabled = disabled;
+  studentAInput.disabled = disabled;
+  studentBInput.disabled = disabled;
+}
+
+function refreshLevel2() {
+  const view = buildLevel2View(problem2);
+  trail = [];
+  drawLevel2Scene(view, null);
+}
+
+function newProblemLevel2() {
+  if (animId) cancelAnimationFrame(animId);
+  launched = false;
+  problem2 = makeLevel2Problem();
+
+  studentAInput.value = '';
+  studentBInput.value = '';
+  revealBtn.style.display = 'none';
+  level2HintEl.innerHTML = 'Use the marked x-intercepts, y-intercept, vertex, and extra point to find <strong>a</strong> and <strong>b</strong> for h(x) = ax&sup2; + bx + c, then test your equation.';
+  statusEl.textContent = '';
+  statusEl.className = '';
+  trail = [];
+  splashParticles = [];
+  setLevel2ControlsDisabled(false);
+
+  refreshLevel2();
+}
+
+function testLevel2() {
+  if (launched) return;
+  const aStudent = parseFloat(studentAInput.value);
+  const bStudent = parseFloat(studentBInput.value);
+  if (Number.isNaN(aStudent) || Number.isNaN(bStudent)) {
+    statusEl.textContent = 'Enter a value for both a and b before testing.';
+    statusEl.className = 'miss';
+    return;
+  }
+
+  launched = true;
+  setLevel2ControlsDisabled(true);
+  statusEl.textContent = '';
+  statusEl.className = '';
+  trail = [];
+  splashParticles = [];
+  revealBtn.style.display = 'inline-block';
+
+  const view = buildLevel2View(problem2);
+  const cGiven = problem2.C;
+  const xSpeed = view.xMax / 140;
+  const maxX = view.xMax;
+  let x = 0;
+
+  function step() {
+    const y = aStudent * x * x + bStudent * x + cGiven;
+    const px = pxX(x, view);
+    const py = pxY(Math.max(y, 0), view);
+
+    trail.push({ px, py });
+    if (trail.length > 10) trail.shift();
+
+    drawLevel2Scene(view, { px, py, wobble: x * 0.15 });
+
+    if ((y <= 0 && x > 0.5) || x >= maxX) {
+      finishTestLevel2(view, x, px, py, x >= maxX && y > 0);
+      return;
+    }
+
+    x += xSpeed;
+    animId = requestAnimationFrame(step);
+  }
+
+  step();
+}
+
+function finishTestLevel2(view, xVal, px, py, neverLanded) {
+  launched = false;
+  setLevel2ControlsDisabled(false);
+
+  if (neverLanded) {
+    statusEl.textContent = 'That equation never comes back down within view. Check the sign and size of a.';
+    statusEl.className = 'miss';
+    drawLevel2Scene(view, null);
+    return;
+  }
+
+  spawnSplash(px, groundPx);
+  function splashFrame() {
+    const alive = stepSplash();
+    drawLevel2Scene(view, null);
+    if (alive) {
+      animId = requestAnimationFrame(splashFrame);
+    } else {
+      splashParticles = [];
+      drawLevel2Scene(view, null);
+    }
+  }
+  splashFrame();
+
+  const tolerance = Math.max(2, view.xMax * 0.02);
+  const distance = Math.abs(xVal - problem2.r2);
+  if (distance <= tolerance) {
+    statusEl.textContent = `Hit! Your equation lands at ${formatNum(xVal)} m, matching the graph. Nice work.`;
+    statusEl.className = 'hit';
+  } else {
+    statusEl.textContent = `Missed by ${formatNum(distance)} m. Your equation lands at ${formatNum(xVal)} m, the graph lands at ${problem2.r2} m. Check your a and b.`;
+    statusEl.className = 'miss';
+  }
+}
+
+revealBtn.addEventListener('click', () => {
+  level2HintEl.innerHTML = `<strong>Correct values:</strong> a &asymp; ${problem2.A.toFixed(4)}, b &asymp; ${problem2.B.toFixed(3)} ` +
+    `<br><span style="font-weight:400;">From the roots: h(x) = a(x &minus; (${formatNum(problem2.r1)}))(x &minus; ${formatNum(problem2.r2)}), then solve for a using the y-intercept or vertex.</span>`;
+});
+
+testBtn.addEventListener('click', testLevel2);
+newProblemBtn.addEventListener('click', newProblemLevel2);
+
+// ============ LEVEL SWITCHING ============
+function switchLevel(n) {
+  if (animId) cancelAnimationFrame(animId);
+  launched = false;
+  currentLevel = n;
+
+  tab1.classList.toggle('active', n === 1);
+  tab2.classList.toggle('active', n === 2);
+  level1Controls.style.display = n === 1 ? '' : 'none';
+  level2Controls.style.display = n === 2 ? '' : 'none';
+  level1Buttons.style.display = n === 1 ? '' : 'none';
+  level2Buttons.style.display = n === 2 ? '' : 'none';
+
+  statusEl.textContent = '';
+  statusEl.className = '';
+  trail = [];
+  splashParticles = [];
+  setLevel1ControlsDisabled(false);
+  setLevel2ControlsDisabled(false);
+
+  if (n === 1) {
+    refresh();
+  } else if (!problem2) {
+    newProblemLevel2();
+  } else {
+    refreshLevel2();
+  }
+}
+
+tab1.addEventListener('click', () => switchLevel(1));
+tab2.addEventListener('click', () => switchLevel(2));
+
+window.addEventListener('resize', () => { if (!launched) { currentLevel === 1 ? refresh() : refreshLevel2(); } });
+
+// ============ INIT ============
+const initPhysics = solvePhysics(angle, velocity, startHeight);
+target.xMeters = randomTargetX(initPhysics.R);
+refresh();
+</script>
+</body>
+</html>

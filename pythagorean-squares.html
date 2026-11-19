@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pythagorean Theorem — Area of Squares</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #f8f8f6; color: #1a1a18; padding: 1.5rem; max-width: 800px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 600; color: #1a3c5e; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: #555; margin-bottom: 1.25rem; line-height: 1.5; }
+
+  .controls { display: flex; gap: 32px; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; }
+  .ctrl { display: flex; align-items: center; gap: 10px; }
+  .ctrl label { font-size: 14px; color: #555; min-width: 48px; }
+  .ctrl span { font-size: 15px; font-weight: 600; min-width: 18px; color: #1a1a18; }
+
+  canvas { display: block; width: 100%; border-radius: 8px; background: #fff; border: 1px solid #ddd; }
+
+  .work-section { margin-top: 1.25rem; }
+  .work-section h2 { font-size: 15px; font-weight: 600; color: #1a3c5e; margin-bottom: 10px; }
+  .work-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 640px) { .work-grid { grid-template-columns: 1fr; } body { padding: 0.75rem; } }
+
+  .work-card { background: #fff; border-radius: 8px; padding: 1rem; border: 1px solid #ddd; }
+  .card-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 10px; }
+  .ca .card-title { color: #0F6E56; }
+  .cb .card-title { color: #185FA5; }
+  .cc .card-title { color: #854F0B; }
+
+  .field-row { margin-bottom: 10px; }
+  .field-row label { display: block; font-size: 12px; color: #666; margin-bottom: 3px; }
+  .field-row input[type="number"] {
+    width: 100%; padding: 6px 10px; font-size: 15px; font-weight: 600;
+    border: 1.5px solid #ccc; border-radius: 6px; outline: none;
+    color: #1a1a18; background: #fafafa;
+  }
+  .field-row input:focus { border-color: #1a6fa3; background: #fff; }
+
+  .answer-box {
+    display: none; margin-top: 6px; padding: 7px 10px;
+    border-radius: 6px; font-size: 13px; font-weight: 600; line-height: 1.5;
+  }
+  .ca .answer-box { background: rgba(15,110,86,0.10); color: #0F6E56; }
+  .cb .answer-box { background: rgba(24,95,165,0.10); color: #185FA5; }
+  .cc .answer-box { background: rgba(133,79,11,0.10); color: #854F0B; }
+
+  .divider { border: none; border-top: 1px solid #eee; margin: 10px 0; }
+
+  .btn-row { margin-top: 1rem; display: flex; gap: 10px; flex-wrap: wrap; }
+  .check-btn {
+    padding: 9px 22px; font-size: 14px; font-weight: 600;
+    background: #1a3c5e; color: #fff; border: none; border-radius: 6px; cursor: pointer;
+  }
+  .check-btn:hover { background: #1a6fa3; }
+  .reveal-btn {
+    padding: 9px 18px; font-size: 14px; font-weight: 600;
+    background: #fff; color: #555; border: 1px solid #ccc; border-radius: 6px;
+    cursor: pointer; display: none;
+  }
+  .reveal-btn:hover { background: #f0f0ee; }
+  .reset-btn {
+    padding: 9px 16px; font-size: 13px; font-weight: 500;
+    background: #fff; color: #555; border: 1px solid #ccc; border-radius: 6px;
+    cursor: pointer; display: none;
+  }
+  .reset-btn:hover { background: #f0f0ee; }
+
+  .insight { border-left: 3px solid #1a6fa3; padding: 10px 14px; margin-top: 1rem;
+             font-size: 14px; color: #1a1a18; line-height: 1.6; background: #eaf2f8; display: none; }
+  .insight strong { color: #1a3c5e; font-weight: 600; }
+
+  .msg { font-size: 13px; margin-top: 10px; min-height: 18px; }
+  .msg.wrong { color: #c0392b; font-weight: 500; }
+  .msg.ok    { color: #0F6E56; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<h1>Pythagorean Theorem — Area of Squares</h1>
+<p class="subtitle">Set the two legs with the sliders. Fill in the side lengths, count the areas, then guess the hypotenuse. Click <em>Show answers</em> when you're ready to check.</p>
+
+<div class="controls">
+  <div class="ctrl">
+    <label for="slA">Leg a</label>
+    <input type="range" id="slA" min="1" max="6" value="3" step="1" style="width:120px">
+    <span id="vA">3</span> units
+  </div>
+  <div class="ctrl">
+    <label for="slB">Leg b</label>
+    <input type="range" id="slB" min="1" max="6" value="4" step="1" style="width:120px">
+    <span id="vB">4</span> units
+  </div>
+</div>
+
+<canvas id="c"></canvas>
+
+<div class="work-section">
+  <h2>Your work</h2>
+  <div class="work-grid">
+
+    <div class="work-card ca">
+      <div class="card-title">Green square</div>
+      <div class="field-row">
+        <label>Side length of the green square</label>
+        <input type="number" id="inSideA" placeholder="a = ?">
+      </div>
+      <hr class="divider">
+      <div class="field-row">
+        <label>Area of the green square</label>
+        <input type="number" id="inA" placeholder="a² = ?">
+      </div>
+      <div class="answer-box" id="ansA"></div>
+    </div>
+
+    <div class="work-card cb">
+      <div class="card-title">Blue square</div>
+      <div class="field-row">
+        <label>Side length of the blue square</label>
+        <input type="number" id="inSideB" placeholder="b = ?">
+      </div>
+      <hr class="divider">
+      <div class="field-row">
+        <label>Area of the blue square</label>
+        <input type="number" id="inB" placeholder="b² = ?">
+      </div>
+      <div class="answer-box" id="ansB"></div>
+    </div>
+
+    <div class="work-card cc">
+      <div class="card-title">Orange square</div>
+      <div class="field-row">
+        <label>Your best guess for the side length (c)</label>
+        <input type="number" id="inSideC" placeholder="c ≈ ?" step="0.001">
+      </div>
+      <hr class="divider">
+      <div class="field-row">
+        <label>Area of orange = green area + blue area</label>
+        <input type="number" id="inC" placeholder="c² = ?">
+      </div>
+      <div class="answer-box" id="ansC"></div>
+    </div>
+
+  </div>
+
+  <div class="msg" id="msg"></div>
+
+  <div class="btn-row">
+    <button class="check-btn" id="checkBtn">Check my answers</button>
+    <button class="reveal-btn" id="revealBtn">Show answers</button>
+    <button class="reset-btn" id="resetBtn">Try new values</button>
+  </div>
+  <div class="insight" id="ins"></div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let correctA, correctB, correctC2, correctC, revealed = false;
+
+function draw(showLabels) {
+  const a = parseInt(document.getElementById('slA').value);
+  const b = parseInt(document.getElementById('slB').value);
+  const c2 = a*a + b*b;
+  const c  = Math.sqrt(c2);
+  correctA = a*a; correctB = b*b; correctC2 = c2; correctC = c;
+
+  const perpX = a, perpY = b;
+  const pad = 1.2;
+  const gridMinX = -a - pad, gridMaxX = b + a + pad;
+  const gridMinY = -b - pad, gridMaxY = a + b + pad;
+  const gridW = gridMaxX - gridMinX;
+  const gridH = gridMaxY - gridMinY;
+
+  const DPR = window.devicePixelRatio || 1;
+  const CW  = canvas.parentElement.offsetWidth || 700;
+  const unit = Math.min(Math.floor((CW-4)/gridW), Math.floor(480/gridH), 54);
+  const CH   = Math.ceil(gridH * unit);
+  canvas.width  = CW * DPR;
+  canvas.height = CH * DPR;
+  canvas.style.height = CH + 'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+  function gx(v) { return (v - gridMinX) * unit; }
+  function gy(v) { return (gridMaxY - v) * unit; }
+
+  const colA = { fill:'rgba(15,110,86,0.12)',  stroke:'#0F6E56', text:'#0F6E56' };
+  const colB = { fill:'rgba(24,95,165,0.12)',  stroke:'#185FA5', text:'#185FA5' };
+  const colC = { fill:'rgba(133,79,11,0.10)',  stroke:'#854F0B', text:'#854F0B' };
+
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, CW, CH);
+
+  // Grid
+  ctx.strokeStyle = 'rgba(0,0,0,0.07)'; ctx.lineWidth = 0.5;
+  for (let gX = Math.floor(gridMinX); gX <= Math.ceil(gridMaxX); gX++) {
+    ctx.beginPath(); ctx.moveTo(gx(gX), gy(gridMinY)); ctx.lineTo(gx(gX), gy(gridMaxY)); ctx.stroke();
+  }
+  for (let gY = Math.floor(gridMinY); gY <= Math.ceil(gridMaxY); gY++) {
+    ctx.beginPath(); ctx.moveTo(gx(gridMinX), gy(gY)); ctx.lineTo(gx(gridMaxX), gy(gY)); ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(gx(gridMinX), gy(0)); ctx.lineTo(gx(gridMaxX), gy(0)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(gx(0), gy(gridMinY)); ctx.lineTo(gx(0), gy(gridMaxY)); ctx.stroke();
+
+  function drawAxisSquare(x0, y0, x1, y1, col) {
+    ctx.fillStyle = col.fill;
+    ctx.fillRect(gx(x0), gy(y1), (x1-x0)*unit, (y1-y0)*unit);
+    ctx.strokeStyle = col.stroke; ctx.lineWidth = 0.5; ctx.globalAlpha = 0.3;
+    for (let i = x0+1; i < x1; i++) {
+      ctx.beginPath(); ctx.moveTo(gx(i), gy(y0)); ctx.lineTo(gx(i), gy(y1)); ctx.stroke();
+    }
+    for (let j = y0+1; j < y1; j++) {
+      ctx.beginPath(); ctx.moveTo(gx(x0), gy(j)); ctx.lineTo(gx(x1), gy(j)); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = col.stroke; ctx.lineWidth = 2;
+    ctx.strokeRect(gx(x0)+1, gy(y1)+1, (x1-x0)*unit-2, (y1-y0)*unit-2);
+  }
+
+  drawAxisSquare(-a, 0, 0, a, colA);
+  drawAxisSquare(0, -b, b, 0, colB);
+
+  const pA = {x:0,y:a}, pB = {x:b,y:0}, pC = {x:b+perpX,y:perpY}, pD = {x:perpX,y:a+perpY};
+  ctx.beginPath();
+  ctx.moveTo(gx(pA.x),gy(pA.y)); ctx.lineTo(gx(pB.x),gy(pB.y));
+  ctx.lineTo(gx(pC.x),gy(pC.y)); ctx.lineTo(gx(pD.x),gy(pD.y));
+  ctx.closePath();
+  ctx.fillStyle = colC.fill; ctx.fill();
+  ctx.strokeStyle = colC.stroke; ctx.lineWidth = 2; ctx.stroke();
+
+  // Labels — only show if revealed
+  const fs = Math.min(14, unit * 0.65);
+  ctx.font = `600 ${fs}px system-ui,sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+  if (showLabels) {
+    const isWhole = Number.isInteger(c);
+
+    ctx.fillStyle = colA.text;
+    ctx.fillText(`a = ${a}`, gx(-a/2), gy(a/2) - fs*0.7);
+    ctx.fillText(`a² = ${correctA}`, gx(-a/2), gy(a/2) + fs*0.7);
+
+    ctx.fillStyle = colB.text;
+    ctx.fillText(`b = ${b}`, gx(b/2), gy(-b/2) - fs*0.7);
+    ctx.fillText(`b² = ${correctB}`, gx(b/2), gy(-b/2) + fs*0.7);
+
+    const hcx = gx((pA.x+pB.x+pC.x+pD.x)/4);
+    const hcy = gy((pA.y+pB.y+pC.y+pD.y)/4);
+    ctx.save();
+    ctx.translate(hcx, hcy);
+    const ang = Math.atan2(gy(pB.y)-gy(pA.y), gx(pB.x)-gx(pA.x));
+    ctx.rotate(ang + Math.PI/2);
+    ctx.fillStyle = colC.text;
+    ctx.font = `600 ${Math.min(14, unit*0.6)}px system-ui,sans-serif`;
+    ctx.fillText(`c² = ${c2}`, 0, -fs*0.7);
+    ctx.fillText(isWhole ? `c = ${c}` : `c = √${c2}`, 0, fs*0.7);
+    ctx.restore();
+  }
+
+  // Triangle
+  ctx.beginPath();
+  ctx.moveTo(gx(0),gy(0)); ctx.lineTo(gx(0),gy(a)); ctx.lineTo(gx(b),gy(0));
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(100,90,200,0.10)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 2.5; ctx.stroke();
+
+  // Right-angle marker
+  const s = Math.max(7, unit*0.18);
+  ctx.beginPath();
+  ctx.moveTo(gx(0)+s, gy(0)); ctx.lineTo(gx(0)+s, gy(0)-s); ctx.lineTo(gx(0), gy(0)-s);
+  ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+  // Leg labels on triangle
+  ctx.font = `500 13px system-ui,sans-serif`; ctx.textBaseline = 'middle';
+  ctx.fillStyle = colA.text; ctx.textAlign = 'left';
+  ctx.fillText(`a = ${a}`, gx(0)+5, gy(a/2));
+  ctx.fillStyle = colB.text; ctx.textAlign = 'center';
+  ctx.fillText(`b = ${b}`, gx(b/2), gy(0)-14);
+
+  ctx.beginPath(); ctx.arc(gx(0),gy(0),3,0,Math.PI*2);
+  ctx.fillStyle = '#333'; ctx.fill();
+
+  document.getElementById('vA').textContent = a;
+  document.getElementById('vB').textContent = b;
+}
+
+function checkAnswers() {
+  const a = parseInt(document.getElementById('slA').value);
+  const b = parseInt(document.getElementById('slB').value);
+  const isWhole = Number.isInteger(correctC);
+
+  const sideA = parseInt(document.getElementById('inSideA').value);
+  const areaA = parseInt(document.getElementById('inA').value);
+  const sideB = parseInt(document.getElementById('inSideB').value);
+  const areaB = parseInt(document.getElementById('inB').value);
+  const areaC = parseInt(document.getElementById('inC').value);
+  const sideC = parseFloat(document.getElementById('inSideC').value);
+
+  const allFilled = [document.getElementById('inSideA'), document.getElementById('inA'),
+                     document.getElementById('inSideB'), document.getElementById('inB'),
+                     document.getElementById('inC'),     document.getElementById('inSideC')]
+                    .every(el => el.value.trim() !== '');
+
+  if (!allFilled) {
+    const msg = document.getElementById('msg');
+    msg.textContent = 'Fill in all six fields before checking.';
+    msg.className = 'msg wrong';
+    return;
+  }
+
+  const sideAok = sideA === a;
+  const areaAok = areaA === correctA;
+  const sideBok = sideB === b;
+  const areaBok = areaB === correctB;
+  const areaCok = areaC === correctC2;
+  const sideCok = isWhole ? sideC === correctC : Math.abs(sideC - correctC) < 0.01;
+
+  const allCorrect = sideAok && areaAok && sideBok && areaBok && areaCok && sideCok;
+  const msg = document.getElementById('msg');
+
+  if (allCorrect) {
+    msg.textContent = 'All correct! See the pattern below.';
+    msg.className = 'msg ok';
+    showAnswers();
+  } else {
+    const wrong = [];
+    if (!sideAok) wrong.push('green side length');
+    if (!areaAok) wrong.push('green area');
+    if (!sideBok) wrong.push('blue side length');
+    if (!areaBok) wrong.push('blue area');
+    if (!areaCok) wrong.push('orange area');
+    if (!sideCok) wrong.push('orange side length');
+    msg.textContent = `Check your work on: ${wrong.join(', ')}.`;
+    msg.className = 'msg wrong';
+    document.getElementById('revealBtn').style.display = 'inline-block';
+  }
+}
+
+function showAnswers() {
+  revealed = true;
+  const isWhole = Number.isInteger(correctC);
+
+  document.getElementById('ansA').style.display = 'block';
+  document.getElementById('ansA').innerHTML = `a = ${Math.sqrt(correctA)} &nbsp;|&nbsp; a² = ${correctA}`;
+
+  document.getElementById('ansB').style.display = 'block';
+  document.getElementById('ansB').innerHTML = `b = ${Math.sqrt(correctB)} &nbsp;|&nbsp; b² = ${correctB}`;
+
+  document.getElementById('ansC').style.display = 'block';
+  document.getElementById('ansC').innerHTML = isWhole
+    ? `c = ${correctC} &nbsp;|&nbsp; c² = ${correctC2}`
+    : `c = √${correctC2} ≈ ${correctC.toFixed(3)} &nbsp;|&nbsp; c² = ${correctC2}`;
+
+  const ins = document.getElementById('ins');
+  ins.style.display = 'block';
+  ins.innerHTML = isWhole
+    ? `<strong>a² + b² = c²</strong> &nbsp;→&nbsp; ${correctA} + ${correctB} = ${correctC2} &nbsp;→&nbsp; c = <strong>${correctC}</strong>. All three sides are whole numbers — a Pythagorean triple.`
+    : `<strong>a² + b² = c²</strong> &nbsp;→&nbsp; ${correctA} + ${correctB} = ${correctC2} &nbsp;→&nbsp; c = √${correctC2} ≈ <strong>${correctC.toFixed(3)}</strong>. The hypotenuse is irrational — it cannot be written as a fraction.`;
+
+  document.getElementById('revealBtn').style.display = 'none';
+  document.getElementById('resetBtn').style.display = 'inline-block';
+  draw(true);
+}
+
+function resetWork() {
+  revealed = false;
+  ['inSideA','inA','inSideB','inB','inC','inSideC'].forEach(id => document.getElementById(id).value = '');
+  ['ansA','ansB','ansC'].forEach(id => document.getElementById(id).style.display = 'none');
+  document.getElementById('ins').style.display = 'none';
+  document.getElementById('revealBtn').style.display = 'none';
+  document.getElementById('resetBtn').style.display = 'none';
+  document.getElementById('msg').textContent = '';
+  document.getElementById('msg').className = 'msg';
+  draw(false);
+}
+
+document.getElementById('slA').addEventListener('input', resetWork);
+document.getElementById('slB').addEventListener('input', resetWork);
+document.getElementById('checkBtn').addEventListener('click', checkAnswers);
+document.getElementById('revealBtn').addEventListener('click', showAnswers);
+document.getElementById('resetBtn').addEventListener('click', resetWork);
+window.addEventListener('resize', () => draw(revealed));
+draw(false);
+</script>
+</body>
+</html>

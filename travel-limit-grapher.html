@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Travel Limit Grapher</title>
+</head>
+<body style="font-family: Arial, sans-serif; font-size: 15px; color: #222; max-width: 1100px; margin: 0 auto; padding: 24px; background-color: #fafafa;">
+
+<h1 style="font-size: 22px; font-weight: bold; color: #1a5276; border-bottom: 3px solid #1a5276; padding-bottom: 8px; margin-bottom: 6px;">Travel Limit Grapher</h1>
+<p style="font-size: 14px; color: #555; margin-top: 0; margin-bottom: 18px;">Check your work by graphing it. Enter the answers <strong>you</strong> calculated &mdash; this tool draws exactly what you type. If your circle misses a building or your triangle has no right angle, that's the graph telling you to recheck your math.</p>
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
+
+  <!-- INPUT PANEL -->
+  <div style="flex: 1 1 300px; min-width: 280px;">
+
+    <div style="background-color: #eaf3f9; border-left: 5px solid #1a5276; padding: 14px 16px; margin-bottom: 14px; border-radius: 4px;">
+      <p style="font-weight: bold; margin: 0 0 10px 0; font-size: 15px;">1. Your Coordinates</p>
+
+      <p style="margin: 0 0 4px 0; font-size: 13px; color: #555;">First place (name, x, y)</p>
+      <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+        <input id="p1name" type="text" placeholder="Post office" style="flex: 2; padding: 6px; border: 1px solid #bbb; border-radius: 4px; font-size: 14px; min-width: 0;">
+        <input id="p1x" type="number" placeholder="x" style="flex: 1; padding: 6px; border: 1px solid #bbb; border-radius: 4px; font-size: 14px; min-width: 0;">
+        <input id="p1y" type="number" placeholder="y" style="flex: 1; padding: 6px; border: 1px solid #bbb; border-radius: 4px; font-size: 14px; min-width: 0;">
+      </div>
+
+      <p style="margin: 0 0 4px 0; font-size: 13px; color: #555;">Second place (name, x, y)</p>
+      <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+        <input id="p2name" type="text" placeholder="Konbini" style="flex: 2; padding: 6px; border: 1px solid #bbb; border-radius: 4px; font-size: 14px; min-width: 0;">
+        <input id="p2x" type="number" placeholder="x" style="flex: 1; padding: 6px; border: 1px solid #bbb; border-radius: 4px; font-size: 14px; min-width: 0;">
+        <input id="p2y" type="number" placeholder="y" style="flex: 1; padding: 6px; border: 1px solid #bbb; border-radius: 4px; font-size: 14px; min-width: 0;">
+      </div>
+
+      <p style="margin: 0 0 4px 0; font-size: 13px; color: #555;">Third place from the story (name, x, y)</p>
+      <div style="display: flex; gap: 6px;">
+        <input id="p3name" type="text" placeholder="Gym" style="flex: 2; padding: 6px; border: 1px solid #bbb; border-radius: 4px; font-size: 14px; min-width: 0;">
+        <input id="p3x" type="number" placeholder="x" style="flex: 1; padding: 6px; border: 1px solid #bbb; border-radius: 4px; font-size: 14px; min-width: 0;">
+        <input id="p3y" type="number" placeholder="y" style="flex: 1; padding: 6px; border: 1px solid #bbb; border-radius: 4px; font-size: 14px; min-width: 0;">
+      </div>
+    </div>
+
+    <div style="background-color: #eaf3f9; border-left: 5px solid #1a5276; padding: 14px 16px; margin-bottom: 14px; border-radius: 4px;">
+      <p style="font-weight: bold; margin: 0 0 6px 0; font-size: 15px;">2. Your Circle</p>
+      <p style="margin: 0 0 8px 0; font-size: 13px; color: #555;">From your circle equation x&sup2; + y&sup2; = r&sup2;, what is r&sup2;?</p>
+      <input id="r2" type="number" placeholder="r&#178; (example: 106)" style="width: 100%; box-sizing: border-box; padding: 6px; border: 1px solid #bbb; border-radius: 4px; font-size: 14px;">
+    </div>
+
+    <button id="drawBtn" style="width: 100%; padding: 10px; background-color: #1a5276; color: #fff; border: none; border-radius: 4px; font-size: 15px; font-weight: bold; cursor: pointer; margin-bottom: 14px;">Draw My Graph</button>
+
+    <div style="background-color: #eaf3f9; border-left: 5px solid #1a5276; padding: 14px 16px; margin-bottom: 14px; border-radius: 4px;">
+      <p style="font-weight: bold; margin: 0 0 6px 0; font-size: 15px;">3. Test a Point</p>
+      <p style="margin: 0 0 8px 0; font-size: 13px; color: #555;">Found another point you think is exactly at the travel limit? Plot it and see.</p>
+      <div style="display: flex; gap: 6px;">
+        <input id="tx" type="number" placeholder="x" style="flex: 1; padding: 6px; border: 1px solid #bbb; border-radius: 4px; font-size: 14px; min-width: 0;">
+        <input id="ty" type="number" placeholder="y" style="flex: 1; padding: 6px; border: 1px solid #bbb; border-radius: 4px; font-size: 14px; min-width: 0;">
+        <button id="testBtn" style="flex: 1; padding: 6px; background-color: #b7950b; color: #fff; border: none; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer;">Plot</button>
+      </div>
+      <div id="testList" style="margin-top: 8px; font-size: 13px;"></div>
+      <button id="clearTests" style="margin-top: 8px; padding: 4px 10px; background-color: #fff; color: #1a5276; border: 1px solid #1a5276; border-radius: 4px; font-size: 12px; cursor: pointer; display: none;">Clear test points</button>
+    </div>
+
+    <div id="checks" style="display: none; background-color: #fdf6e3; border-left: 5px solid #b7950b; padding: 14px 16px; border-radius: 4px;">
+      <p style="font-weight: bold; margin: 0 0 6px 0; font-size: 15px;">What the Graph Says</p>
+      <p id="checkAngle" style="margin: 0 0 4px 0; font-size: 14px;"></p>
+      <p id="checkCircle" style="margin: 0; font-size: 14px;"></p>
+    </div>
+
+  </div>
+
+  <!-- GRAPH PANEL -->
+  <div style="flex: 2 1 480px; min-width: 300px; background-color: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 10px;">
+    <svg id="graph" viewBox="0 0 600 600" style="width: 100%; height: auto; display: block;"></svg>
+    <p style="font-size: 12px; color: #777; margin: 8px 0 0 0; text-align: center;">
+      <span style="color: #1a5276; font-weight: bold;">&#9679;</span> Buildings &nbsp;
+      <span style="color: #1e8449; font-weight: bold;">&#9644;</span> Walking path &nbsp;
+      <span style="color: #c0392b; font-weight: bold;">- -</span> Travel limit &nbsp;
+      <span style="color: #b7950b; font-weight: bold;">&#9679;</span> Test points
+    </p>
+  </div>
+
+</div>
+
+<p style="font-size: 13px; color: #777; margin-top: 18px;">This tool draws your answers; it doesn't solve the problems. Your discussion post still needs the written work: formulas, steps, and your own graph.</p>
+
+<script>
+(function () {
+  var SIZE = 600;
+  var svg = document.getElementById('graph');
+  var testPoints = [];
+  var state = null;
+
+  function el(tag, attrs) {
+    var e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  function num(id) {
+    var v = document.getElementById(id).value;
+    return v === '' ? null : parseFloat(v);
+  }
+
+  function readState() {
+    var r2 = num('r2');
+    return {
+      p1: { name: document.getElementById('p1name').value || 'Place 1', x: num('p1x'), y: num('p1y') },
+      p2: { name: document.getElementById('p2name').value || 'Place 2', x: num('p2x'), y: num('p2y') },
+      p3: { name: document.getElementById('p3name').value || 'Place 3', x: num('p3x'), y: num('p3y') },
+      r2: r2,
+      r: (r2 !== null && r2 > 0) ? Math.sqrt(r2) : null
+    };
+  }
+
+  function draw() {
+    state = readState();
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+    // Figure out how much of the plane we need to show
+    var extent = 6;
+    [state.p1, state.p2, state.p3].forEach(function (p) {
+      if (p.x !== null) extent = Math.max(extent, Math.abs(p.x));
+      if (p.y !== null) extent = Math.max(extent, Math.abs(p.y));
+    });
+    if (state.r) extent = Math.max(extent, state.r);
+    testPoints.forEach(function (t) {
+      extent = Math.max(extent, Math.abs(t.x), Math.abs(t.y));
+    });
+    extent = Math.ceil(extent) + 2;
+    var unit = (SIZE - 60) / (2 * extent);
+    var cx = SIZE / 2, cy = SIZE / 2;
+
+    function X(x) { return cx + x * unit; }
+    function Y(y) { return cy - y * unit; }
+
+    // Grid
+    for (var i = -extent; i <= extent; i++) {
+      svg.appendChild(el('line', { x1: X(i), y1: Y(-extent), x2: X(i), y2: Y(extent), stroke: '#eee', 'stroke-width': 1 }));
+      svg.appendChild(el('line', { x1: X(-extent), y1: Y(i), x2: X(extent), y2: Y(i), stroke: '#eee', 'stroke-width': 1 }));
+    }
+    // Axes
+    svg.appendChild(el('line', { x1: X(-extent), y1: Y(0), x2: X(extent), y2: Y(0), stroke: '#999', 'stroke-width': 1.5 }));
+    svg.appendChild(el('line', { x1: X(0), y1: Y(-extent), x2: X(0), y2: Y(extent), stroke: '#999', 'stroke-width': 1.5 }));
+
+    // Axis tick labels
+    var step = extent > 12 ? 5 : (extent > 6 ? 2 : 1);
+    for (var t = -extent; t <= extent; t += step) {
+      if (t === 0) continue;
+      var lx = el('text', { x: X(t), y: Y(0) + 14, 'font-size': 10, fill: '#888', 'text-anchor': 'middle', 'font-family': 'Arial' });
+      lx.textContent = t;
+      svg.appendChild(lx);
+      var ly = el('text', { x: X(0) - 6, y: Y(t) + 4, 'font-size': 10, fill: '#888', 'text-anchor': 'end', 'font-family': 'Arial' });
+      ly.textContent = t;
+      svg.appendChild(ly);
+    }
+
+    // Circle (student's r2)
+    if (state.r) {
+      svg.appendChild(el('circle', { cx: X(0), cy: Y(0), r: state.r * unit, fill: 'none', stroke: '#c0392b', 'stroke-width': 2, 'stroke-dasharray': '6,5' }));
+    }
+
+    // Triangle path
+    var havePath = state.p1.x !== null && state.p1.y !== null && state.p2.x !== null && state.p2.y !== null;
+    if (havePath) {
+      var d = 'M ' + X(0) + ' ' + Y(0) + ' L ' + X(state.p1.x) + ' ' + Y(state.p1.y) + ' L ' + X(state.p2.x) + ' ' + Y(state.p2.y) + ' Z';
+      svg.appendChild(el('path', { d: d, fill: 'rgba(30,132,73,0.08)', stroke: '#1e8449', 'stroke-width': 2.5, 'stroke-linejoin': 'round' }));
+    }
+
+    // Points
+    function plotPoint(p, label, color) {
+      if (p.x === null || p.y === null) return;
+      svg.appendChild(el('circle', { cx: X(p.x), cy: Y(p.y), r: 5, fill: color }));
+      var txt = el('text', { x: X(p.x) + 8, y: Y(p.y) - 8, 'font-size': 12, fill: '#222', 'font-family': 'Arial', 'font-weight': 'bold' });
+      txt.textContent = label + ' (' + p.x + ', ' + p.y + ')';
+      svg.appendChild(txt);
+    }
+
+    plotPoint({ x: 0, y: 0 }, 'Home', '#1a5276');
+    plotPoint(state.p1, state.p1.name, '#1a5276');
+    plotPoint(state.p2, state.p2.name, '#1a5276');
+    plotPoint(state.p3, state.p3.name, '#1a5276');
+    testPoints.forEach(function (tp) {
+      plotPoint(tp, '', '#b7950b');
+    });
+
+    runChecks(havePath);
+    renderTestList();
+  }
+
+  function runChecks(havePath) {
+    var box = document.getElementById('checks');
+    var angleP = document.getElementById('checkAngle');
+    var circleP = document.getElementById('checkCircle');
+    var show = false;
+
+    if (havePath) {
+      // Right angle at p1: vectors p1->home and p1->p2
+      var v1 = { x: -state.p1.x, y: -state.p1.y };
+      var v2 = { x: state.p2.x - state.p1.x, y: state.p2.y - state.p1.y };
+      var dot = v1.x * v2.x + v1.y * v2.y;
+      if (Math.abs(dot) < 0.0001) {
+        angleP.innerHTML = '&#10003; Your triangle has a right angle at ' + state.p1.name + '.';
+        angleP.style.color = '#1e8449';
+      } else {
+        angleP.innerHTML = '&#10007; No right angle at ' + state.p1.name + '. The walk should turn 90&deg; there &mdash; recheck your coordinates.';
+        angleP.style.color = '#c0392b';
+      }
+      show = true;
+    } else {
+      angleP.textContent = '';
+    }
+
+    if (state.r && state.p2.x !== null && state.p2.y !== null) {
+      var d2 = state.p2.x * state.p2.x + state.p2.y * state.p2.y;
+      if (Math.abs(d2 - state.r2) < 0.0001) {
+        circleP.innerHTML = '&#10003; Your circle passes exactly through ' + state.p2.name + '.';
+        circleP.style.color = '#1e8449';
+      } else {
+        circleP.innerHTML = '&#10007; Your circle does not pass through ' + state.p2.name + '. The radius should equal the diagonal &mdash; recheck r&sup2;.';
+        circleP.style.color = '#c0392b';
+      }
+      show = true;
+    } else {
+      circleP.textContent = '';
+    }
+
+    box.style.display = show ? 'block' : 'none';
+  }
+
+  function renderTestList() {
+    var list = document.getElementById('testList');
+    var clearBtn = document.getElementById('clearTests');
+    list.innerHTML = '';
+    testPoints.forEach(function (tp) {
+      var line = document.createElement('p');
+      line.style.margin = '2px 0';
+      var d2 = tp.x * tp.x + tp.y * tp.y;
+      var verdict = '';
+      if (state && state.r2 !== null) {
+        if (Math.abs(d2 - state.r2) < 0.0001) verdict = ' &mdash; <span style="color:#1e8449;font-weight:bold;">exactly at the limit</span>';
+        else if (d2 < state.r2) verdict = ' &mdash; inside the limit';
+        else verdict = ' &mdash; <span style="color:#c0392b;">outside the limit</span>';
+      }
+      line.innerHTML = '(' + tp.x + ', ' + tp.y + '): x&sup2; + y&sup2; = ' + d2 + verdict;
+      list.appendChild(line);
+    });
+    clearBtn.style.display = testPoints.length ? 'inline-block' : 'none';
+  }
+
+  document.getElementById('drawBtn').addEventListener('click', draw);
+
+  document.getElementById('testBtn').addEventListener('click', function () {
+    var x = num('tx'), y = num('ty');
+    if (x === null || y === null) return;
+    testPoints.push({ x: x, y: y });
+    document.getElementById('tx').value = '';
+    document.getElementById('ty').value = '';
+    draw();
+  });
+
+  document.getElementById('clearTests').addEventListener('click', function () {
+    testPoints = [];
+    draw();
+  });
+
+  draw();
+})();
+</script>
+
+</body>
+</html>

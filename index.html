@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interactive Math Simulations | Cynthia L. McGinnis</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#eef3f7; color:#1a1a1a; }
+  header { background:#13324f; color:#fff; padding:36px 20px 30px; text-align:center; }
+  header h1 { margin:0 0 8px; font-size:28px; }
+  header p { margin:0 auto; max-width:620px; opacity:.88; font-size:16px; line-height:1.5; }
+  main { max-width:960px; margin:0 auto; padding:26px 16px 40px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:18px; }
+  a.card { display:block; background:#fff; border-radius:12px; padding:20px; text-decoration:none; color:inherit; box-shadow:0 2px 8px rgba(0,0,0,.07); border-top:5px solid #1a6fa3; transition:transform .15s, box-shadow .15s; }
+  a.card:hover { transform:translateY(-3px); box-shadow:0 6px 16px rgba(0,0,0,.12); }
+  .tag { display:inline-block; font-size:12px; font-weight:700; color:#1a6fa3; background:#eaf2f8; padding:3px 9px; border-radius:999px; margin-bottom:10px; }
+  .card h2 { margin:0 0 8px; font-size:19px; color:#13324f; }
+  .card p { margin:0 0 10px; font-size:15px; line-height:1.5; color:#374151; }
+  .card .learn { font-size:14px; color:#065f46; font-weight:600; }
+  a.card.c1 { border-top-color:#e8871e; } .c1 .tag { color:#9a4f00; background:#fff4e0; }
+  a.card.c2 { border-top-color:#ef5777; } .c2 .tag { color:#9f1239; background:#ffe4ec; }
+  a.card.c3 { border-top-color:#16a34a; } .c3 .tag { color:#065f46; background:#dcfce7; }
+  h2.sec { font-size:20px; color:#13324f; margin:8px 0 12px; }
+  .grid + h2.sec { margin-top:34px; }
+  p.secp { margin:-4px 0 14px; color:#4b5563; font-size:15px; }
+  footer { text-align:center; font-size:14px; color:#4b5563; padding:0 16px 30px; line-height:1.6; }
+  footer a { color:#1a6fa3; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Interactive Math Simulations</h1>
+  <p>College algebra simulations and problem generators built for adult, military-affiliated learners. Each one asks the learner to predict, build, and test before the math gives anything away.</p>
+</header>
+<main>
+  <h2 class="sec">Simulations</h2>
+  <div class="grid">
+    <a class="card c1" href="search-and-rescue-circle.html">
+      <span class="tag">Circles · Distance &amp; midpoint</span>
+      <h2>Bravo Two-Seven: Where Does the Center Go?</h2>
+      <p>A pilot ejects somewhere on a flight leg. Fuel allows one search circle. Place the center, launch the helicopters, and find out whether your math found the pilot.</p>
+      <span class="learn">Learners discover why the endpoints of a diameter fix the center.</span>
+    </a>
+    <a class="card c1" href="ladder-rescue-simulator.html">
+      <span class="tag">Pythagorean theorem · Right triangles</span>
+      <h2>Ladder Rescue Simulator</h2>
+      <p>Set a building height and base distance and watch the ladder and climb angle respond. Then work six emergency rescues and decide whether the truck ladder reaches.</p>
+      <span class="learn">Learners connect c = &radic;(a&sup2; + b&sup2;) to a safety decision with real stakes.</span>
+    </a>
+    <a class="card c2" href="water-balloon-launch.html">
+      <span class="tag">Quadratic functions</span>
+      <h2>Water Balloon Launch</h2>
+      <p>Tune angle, speed, and platform height to hit a target, then read a parabola&#39;s intercepts and vertex to write its equation and test it with a launch.</p>
+      <span class="learn">Learners connect roots, vertex, and coefficients to a real trajectory.</span>
+    </a>
+    <a class="card c2" href="quadratic-explorer.html">
+      <span class="tag">Quadratic functions</span>
+      <h2>Interactive Quadratic Explorer</h2>
+      <p>Slide a, b, and c and watch the vertex, intercepts, axis of symmetry, and discriminant update as the grid rescales to fit.</p>
+      <span class="learn">Learners see what each coefficient controls before they memorize it.</span>
+    </a>
+    <a class="card c3" href="pythagorean-squares.html">
+      <span class="tag">Pythagorean theorem</span>
+      <h2>Pythagorean Squares</h2>
+      <p>Build squares on each leg of a right triangle, count their areas, and predict the hypotenuse before the answer appears.</p>
+      <span class="learn">Learners see a&sup2; + b&sup2; = c&sup2; as a statement about area.</span>
+    </a>
+    <a class="card c3" href="travel-limit-grapher.html">
+      <span class="tag">Circles · Distance formula</span>
+      <h2>Travel Limit Grapher</h2>
+      <p>Learners graph their own answers to a travel-limit circle problem. The tool flags a missing right angle or a circle that misses its building.</p>
+      <span class="learn">Learners check their own work against the geometry instead of an answer key.</span>
+    </a>
+    <a class="card " href="modulus-as-distance.html">
+      <span class="tag">Complex numbers</span>
+      <h2>Modulus as Distance</h2>
+      <p>Drag a complex number and watch a right triangle build |z| from its real and imaginary parts, then extend the idea to the distance between two points.</p>
+      <span class="learn">Learners see |a + bi| as the Pythagorean theorem in disguise.</span>
+    </a>
+    <a class="card " href="complex-plane-arithmetic.html">
+      <span class="tag">Complex numbers</span>
+      <h2>Complex Plane Arithmetic</h2>
+      <p>Add complex numbers as vectors, then multiply them and watch the product rotate and stretch. Try z&#8322; = i, z&#8322; = &minus;1, and the conjugate.</p>
+      <span class="learn">Learners see multiplication as rotation plus scaling.</span>
+    </a>
+  </div>
+  <h2 class="sec">Personalized problem generators</h2>
+  <p class="secp">Each learner gets unique numbers and a story built from a seed, so work can&#39;t be copied but every version has the same structure.</p>
+  <div class="grid">
+    <a class="card c2" href="algebra-story-generator.html">
+      <span class="tag">Linear · Quadratic · Exponential</span>
+      <h2>Story Problem Generator</h2>
+      <p>Every learner gets a unique story with a linear, a quadratic, and an exponential model, plus a code that brings the same version back. Learners plot points on built-in grids and export a PDF.</p>
+      <span class="learn">One story, three function families, compared side by side.</span>
+    </a>
+    <a class="card c2" href="quadratic-story-generator.html">
+      <span class="tag">Quadratic functions</span>
+      <h2>Build Your Own Quadratic Story</h2>
+      <p>Learners pick a genre and a character and get a personalized four-part problem: test a shot, fix it, find a hidden launcher, and build a parabola from one point.</p>
+      <span class="learn">Seeded versions give every learner different numbers with the same structure.</span>
+    </a>
+    <a class="card c1" href="network-infection-mission.html">
+      <span class="tag">Exponential &amp; logistic growth</span>
+      <h2>Network Infection Mission Brief</h2>
+      <p>A callsign generates a cyber intrusion mission. Learners model the breach with exponential and logistic growth, find the tipping point, and brief the commander. Exports to Word.</p>
+      <span class="learn">Learners compare unlimited growth with growth that hits a capacity.</span>
+    </a>
+  </div>
+</main>
+<footer>
+  Designed by Cynthia L. McGinnis · Mathematics and Computer Science<br>
+  <a href="https://github.com/cynthialmcginnis/math-simulations">View the code on GitHub</a>
+</footer>
+</body>
+</html>
