@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quadratic Equations Flipbook</title>
+<style>
+:root{
+  --navy:#1a3c5e; --navy-d:#102a44; --teal:#1a6fa3; --amber:#F0C040; --ice:#EAF2F8;
+  --ink:#1b2b3c; --paper:#fbfdff; --line:#c9d6e2;
+  --ca:#1a6fa3; --cb:#7b4fa0; --cc:#23895c; --zero:#d1453b;
+  --warn:#fdeeea; --warn-b:#d9534f; --ask:#fff7da;
+  --serif:Georgia,'Times New Roman',serif;
+  --sans:'Segoe UI',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:var(--sans);color:var(--ink);overflow:hidden;display:flex;flex-direction:column;
+  background:radial-gradient(ellipse at 50% 35%,#1d4c78 0%,#10304f 55%,#0a2038 100%)}
+button{font-family:inherit}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.hide{display:none!important}
+
+/* ---------- stage and book ---------- */
+#stage{flex:1;position:relative;overflow:hidden;min-height:0}
+#fit{position:absolute;left:50%;top:50%;width:1280px;height:800px;transform:translate(-50%,-50%) scale(var(--s,1))}
+#slider{position:absolute;inset:0;transition:transform .8s cubic-bezier(.45,.05,.25,1)}
+#book{position:absolute;inset:0;perspective:2800px;transition:opacity .18s}
+#book.fade{opacity:0}
+.half{position:absolute;top:0;width:640px;height:800px;background:var(--paper);
+  box-shadow:0 0 0 7px var(--navy-d),0 26px 60px rgba(0,0,0,.55)}
+.half.left{left:0;border-radius:8px 0 0 8px}
+.half.right{left:640px;border-radius:0 8px 8px 0}
+.half.empty{visibility:hidden}
+#flipper{position:absolute;left:640px;top:0;width:640px;height:800px;transform-origin:0 50%;
+  transform-style:preserve-3d;display:none;z-index:6;pointer-events:none;will-change:transform}
+.face{position:absolute;inset:0;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  background:var(--paper);box-shadow:0 0 30px rgba(0,0,0,.35)}
+.face.back{transform:rotateY(180deg)}
+.face::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;
+  background:linear-gradient(90deg,rgba(0,0,0,.45),rgba(0,0,0,0) 70%);animation:shade var(--fd,.8s) ease-in-out}
+.face.back::after{background:linear-gradient(270deg,rgba(0,0,0,.45),rgba(0,0,0,0) 70%)}
+@keyframes shade{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
+.half>.page,.face>.page{position:absolute;inset:0}
+
+#single{position:absolute;inset:0;overflow-y:auto;padding:12px 10px 20px;display:none}
+body.single #fit{display:none}
+body.single #single{display:block}
+body.single .edge{display:none}
+.page.single{position:relative;inset:auto;width:100%;max-width:720px;height:auto;min-height:calc(100% - 4px);margin:0 auto;
+  overflow:visible;border-radius:8px;padding:22px 18px 56px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.page.single::after{display:none}
+.page.single.cover{min-height:calc(100vh - 100px)}
+@keyframes inL{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:none}}
+@keyframes inR{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+.page.single.anL{animation:inL .28s ease-out}
+.page.single.anR{animation:inR .28s ease-out}
+
+.edge{position:absolute;top:0;bottom:0;width:72px;border:0;background:transparent;color:#fff;font-size:44px;
+  opacity:0;cursor:pointer;z-index:10;transition:opacity .2s}
+.edge:hover,.edge:focus-visible{opacity:.95}
+.edge.prev{left:0;background:linear-gradient(90deg,rgba(0,0,0,.35),transparent)}
+.edge.next{right:0;background:linear-gradient(270deg,rgba(0,0,0,.35),transparent)}
+.edge:disabled{display:none}
+
+/* ---------- nav bar ---------- */
+#bar{height:62px;flex:none;display:flex;align-items:center;justify-content:center;gap:14px;
+  background:rgba(6,20,36,.6);border-top:1px solid rgba(255,255,255,.1);position:relative;padding:0 10px}
+.nb{font:600 15px var(--sans);color:#fff;background:transparent;border:2px solid rgba(255,255,255,.35);border-radius:8px;
+  padding:7px 14px;cursor:pointer}
+.nb:hover:not(:disabled){background:rgba(255,255,255,.12)}
+.nb{white-space:nowrap}
+.nb:disabled{opacity:.35;cursor:default}
+@media (max-width:480px){.nb{padding:7px 9px;font-size:13.5px}#bar{gap:8px}#pg{min-width:64px;font-size:12px}}
+#dots{display:flex;gap:9px;align-items:center}
+#dots button{width:13px;height:13px;border-radius:50%;border:2px solid #7fa6c9;background:transparent;padding:0;cursor:pointer}
+#dots button.on{background:var(--amber);border-color:var(--amber);transform:scale(1.2)}
+#pg{color:#cfe0f0;font-size:14px;min-width:96px;text-align:center}
+body:not(.single) #pg{display:none}
+body.single #dots{display:none}
+#toc{position:absolute;bottom:70px;left:50%;transform:translateX(-50%);background:var(--paper);color:var(--ink);
+  border-radius:10px;box-shadow:0 14px 40px rgba(0,0,0,.5);padding:8px;width:min(380px,92vw);z-index:20}
+#toc button{display:block;width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:9px 12px;
+  font:600 16px var(--sans);color:var(--navy);cursor:pointer}
+#toc button:hover{background:var(--ice)}
+
+/* ---------- page basics ---------- */
+.page{width:640px;height:800px;padding:30px 44px 50px;font-size:16px;line-height:1.45;color:var(--ink);overflow-x:hidden;overflow-y:auto;
+  scrollbar-width:thin;background-color:var(--paper);
+  background-image:linear-gradient(rgba(26,111,163,.065) 1px,transparent 1px),linear-gradient(90deg,rgba(26,111,163,.065) 1px,transparent 1px);
+  background-size:24px 24px}
+.page.rp::after,.page.lp::after{content:"";position:absolute;top:0;bottom:0;width:40px;pointer-events:none}
+.page.rp::after{left:0;background:linear-gradient(90deg,rgba(10,30,50,.2),transparent)}
+.page.lp::after{right:0;background:linear-gradient(270deg,rgba(10,30,50,.2),transparent)}
+h1{font:700 31px/1.14 var(--serif);color:var(--navy);margin:0 0 8px;letter-spacing:-.01em}
+h2{font:700 20px/1.2 var(--serif);color:var(--navy);margin:13px 0 5px}
+p{margin:0 0 9px}
+.lead{font-size:18px}
+i{font-family:var(--serif);font-style:italic}
+.ca{color:var(--ca)}.cb{color:var(--cb)}.cc{color:var(--cc)}
+span.ca,span.cb,span.cc{font-weight:600}
+.foot{position:absolute;left:44px;right:44px;bottom:14px;display:flex;justify-content:space-between;font-size:13px;color:#5b7690}
+.page.rp .foot{flex-direction:row-reverse}
+.page.single .foot{left:18px;right:18px}
+.eq{font-family:var(--serif);font-size:25px;text-align:center;line-height:1.3}
+.eq.big{font-size:30px;margin:6px 0 10px}
+.eqstack{display:flex;flex-wrap:wrap;gap:8px 14px;justify-content:center;margin:6px 0 12px}
+.eqstack .eq{font-size:21px;background:#fff;border:1px solid #cddbe7;border-radius:6px;padding:5px 12px}
+.note,.ask,.warn{padding:9px 14px;margin:11px 0;border-radius:0 7px 7px 0;font-size:16px}
+.note{background:var(--ice);border-left:5px solid var(--teal)}
+.ask{background:var(--ask);border-left:5px solid var(--amber)}
+.warn{background:var(--warn);border-left:5px solid var(--warn-b)}
+.note b,.ask b,.warn b{color:var(--navy)}
+.tiny{font-size:14px;color:#456}
+.btn{font:600 15px var(--sans);padding:7px 14px;border-radius:7px;border:2px solid var(--navy);background:var(--navy);color:#fff;cursor:pointer}
+.btn:hover{filter:brightness(1.15)}
+.btn.ghost{background:#fff;color:var(--navy)}
+.btn.amber{background:var(--amber);border-color:var(--amber);color:var(--navy)}
+.btn:disabled{opacity:.4;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+input[type=number],input[type=text]{width:70px;font:600 18px var(--serif);padding:5px 6px;border:2px solid #9fb6ca;border-radius:6px;text-align:center;background:#fff;color:var(--ink)}
+select{font:600 16px var(--sans);padding:6px 8px;border:2px solid #9fb6ca;border-radius:6px;background:#fff;color:var(--ink)}
+input.ok,select.ok{border-color:var(--cc);background:#e9f7f0}
+input.bad,select.bad{border-color:var(--warn-b);background:#fdecea}
+.fb{min-height:24px;font-weight:600;margin-top:6px}
+.fb.good{color:var(--cc)}.fb.nope{color:#b23b36}
+.graph{display:block;width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:6px}
+.glab{font:600 12.5px var(--sans);fill:var(--navy);paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}
+.gtick{font:11px var(--sans);fill:#5b7690;paint-order:stroke;stroke:#fff;stroke-width:3px}
+.gax{font:italic 14px var(--serif);fill:var(--navy)}
+.sl{display:block;margin:2px 0 4px}
+.slrow{display:flex;gap:18px}
+.slrow .sl{flex:1;min-width:0}
+.slgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
+@media (max-width:480px){.slrow{flex-direction:column;gap:0}.slgrid{grid-template-columns:1fr}}
+.slname{display:flex;justify-content:space-between;font-weight:600;font-size:16px}
+.sl input{width:100%;accent-color:var(--teal);height:24px;margin:0}
+output{font-family:var(--serif);font-weight:700}
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:15.5px;margin:8px 0}
+.readout div b{color:var(--navy)}
+.cols{display:flex;gap:16px}
+.cols>*{flex:1;min-width:0}
+details{margin:4px 0}
+summary{cursor:pointer;font-weight:600;color:var(--navy)}
+summary::marker{color:var(--teal)}
+details p{margin:4px 0 2px 18px;font-size:15.5px}
+.tbl{width:100%;border-collapse:collapse;font-size:15.5px;background:#fff;margin:6px 0 10px}
+.tbl th,.tbl td{border:1px solid #cddbe7;padding:6px 10px;text-align:left;vertical-align:top}
+.tbl th{background:var(--navy);color:#fff;font-weight:600}
+.tbl td:first-child{font-weight:600;color:var(--navy);white-space:nowrap}
+
+/* sorting game */
+.srow{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;padding:6px 0;border-bottom:1px solid #dbe6ef}
+.srow .sx{font:600 21px var(--serif);flex:0 0 150px}
+.srow .sfb{flex:1 1 190px;font-size:14px;line-height:1.3;min-height:0;font-weight:600}
+.srow .sfb.good{color:var(--cc)}.srow .sfb.nope{color:#b23b36}
+.choice{font:600 14.5px var(--sans);padding:5px 11px;border-radius:6px;border:2px solid #9fb6ca;background:#fff;color:var(--navy);cursor:pointer}
+.choice:hover{border-color:var(--teal)}
+.choice.right{background:#e9f7f0;border-color:var(--cc)}
+.choice.wrong{background:#fdecea;border-color:var(--warn-b)}
+.coefrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.coefrow label{font:600 20px var(--serif)}
+
+/* cards */
+.card{border:1px solid #c7d8e6;border-radius:8px;background:#fff;margin:6px 0;overflow:hidden}
+.card .ch{display:flex;align-items:center;gap:12px;width:100%;padding:7px 12px;background:none;border:0;font:600 17px var(--sans);color:var(--navy);cursor:pointer;text-align:left}
+.ic{width:34px;height:34px;border-radius:50%;background:var(--navy);display:grid;place-items:center;flex:none}
+.ic svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.chev{margin-left:auto;font:700 20px var(--sans);color:var(--teal)}
+.card .cbody{display:none;padding:0 14px 10px 58px;font-size:15.5px;line-height:1.45}
+.card.open .cbody{display:block}
+.card.open{border-color:var(--teal)}
+
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0}
+.chip{font:600 14.5px var(--sans);padding:6px 12px;border-radius:999px;border:2px solid var(--navy);background:#fff;color:var(--navy);cursor:pointer}
+.chip.on{background:var(--navy);color:#fff}
+.chip.seen::after{content:" \2713";color:var(--cc);font-weight:700}
+.chip.on.seen::after{color:var(--amber)}
+.tabs{display:flex;gap:0;margin:6px 0 8px}
+.tabs button{flex:1;font:600 15px var(--sans);padding:7px;border:2px solid var(--navy);background:#fff;color:var(--navy);cursor:pointer}
+.tabs button:first-child{border-radius:7px 0 0 7px}.tabs button:last-child{border-radius:0 7px 7px 0;border-left:0}
+.tabs button.on{background:var(--navy);color:#fff}
+
+/* challenge list */
+.chal{display:flex;gap:10px;align-items:center;padding:6px 10px;margin:4px 0;border:2px solid #c7d8e6;border-radius:8px;background:#fff;font-size:15.5px}
+.chal .mark{width:24px;height:24px;border-radius:50%;border:2px solid #9fb6ca;flex:none;display:grid;place-items:center;font-weight:700;color:#fff;font-size:14px}
+.chal.solved{border-color:var(--cc);background:#eef9f3}
+.chal.solved .mark{background:var(--cc);border-color:var(--cc)}
+.chal.solved .mark::after{content:"\2713"}
+
+/* stepper */
+.steps{display:flex;gap:6px;margin:8px 0}
+.steps span{flex:1;height:8px;border-radius:4px;background:#cddbe7}
+.steps span.on{background:var(--teal)}
+.steps span.cur{background:var(--amber)}
+.stepbox{background:#fff;border:2px solid var(--navy);border-radius:8px;padding:10px 14px;min-height:150px;font-size:16px}
+.stepbox h3{margin:0 0 4px;font:700 18px var(--serif);color:var(--navy)}
+.stepbox .calc{font-family:var(--serif);font-size:18px;margin:4px 0}
+
+/* mission */
+.mgrid{display:grid;grid-template-columns:150px 1fr;gap:5px 10px;align-items:center;margin:6px 0}
+.mgrid .ml{font-weight:600;color:var(--navy)}
+.mgrid .mi{display:flex;gap:8px;align-items:center;font:600 18px var(--serif)}
+.work{background:var(--ice);border-left:5px solid var(--teal);padding:6px 14px;margin:6px 0;font-size:14.5px;line-height:1.38;border-radius:0 7px 7px 0}
+.work div{margin:2px 0}
+
+.pmini{display:flex;gap:10px;margin:6px 0 10px}
+.pmini figure{margin:0;flex:1;text-align:center;font-size:14px}
+.pmini figcaption{margin-top:4px;font-weight:600;color:var(--navy)}
+.hose-status{font-weight:600;min-height:46px;padding:6px 12px;border-radius:7px;margin:8px 0;background:#fff;border:2px solid #c7d8e6}
+.hose-status.good{border-color:var(--cc);background:#eef9f3;color:#176b45}
+.hose-status.nope{border-color:#e4b04a;background:#fff8e6}
+
+/* cover and back */
+.page.cover,.page.back{background:var(--navy);background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);
+  background-size:24px 24px;color:#fff;border-left:12px solid var(--navy-d);overflow:hidden;padding:56px 50px}
+.page.back{border-left:0;border-right:12px solid var(--navy-d)}
+.page.cover::after,.page.back::after{display:none}
+.cover h1{color:#fff;font-size:60px;line-height:1.02;margin:0 0 14px}
+.cover .sub{font-size:20px;color:#cfe3f4;max-width:430px}
+.cover svg.art{display:block;width:100%;height:auto;margin:22px 0 12px}
+.cover .hint{margin-top:12px;font-size:14px;color:#9dbbd6}
+.art .curve{stroke-dasharray:1400;stroke-dashoffset:0;animation:draw 2.4s ease-out .5s both}
+@keyframes draw{from{stroke-dashoffset:1400}to{stroke-dashoffset:0}}
+.back h1{color:#fff}
+.back .plist{list-style:none;margin:14px 0;padding:0}
+.back .plist li{display:flex;gap:12px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.14);font-size:16.5px;color:#a9c4dc}
+.back .plist li::before{content:"";width:22px;height:22px;border-radius:50%;border:2px solid #6f94b6;flex:none}
+.back .plist li.on{color:#fff}
+.back .plist li.on::before{background:var(--amber);border-color:var(--amber);content:"\2713";color:var(--navy);display:grid;place-items:center;font-weight:700;font-size:14px}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="fit"><div id="slider"><div id="book">
+    <div class="half left empty" id="leftHalf"></div>
+    <div class="half right" id="rightHalf"></div>
+    <div id="flipper"><div class="face front"></div><div class="face back"></div></div>
+  </div></div></div>
+  <div id="single"></div>
+  <button class="edge prev" id="edgePrev" aria-label="Previous page">&#8249;</button>
+  <button class="edge next" id="edgeNext" aria-label="Next page">&#8250;</button>
+</div>
+<div id="bar">
+  <button class="nb" id="prevBtn" aria-label="Previous page">&#8592; Back</button>
+  <button class="nb" id="tocBtn" aria-haspopup="true">Contents</button>
+  <div id="dots" role="tablist" aria-label="Spreads"></div>
+  <div id="pg"></div>
+  <button class="nb" id="nextBtn" aria-label="Next page">Next &#8594;</button>
+  <div id="toc" class="hide" role="menu"></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+var NS='http://www.w3.org/2000/svg';
+var MINUS='\u2212';
+var RM=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- helpers ---------- */
+function $(s,r){return (r||document).querySelector(s);}
+function S(tag,attrs){var e=document.createElementNS(NS,tag);for(var k in attrs){e.setAttribute(k,attrs[k]);}return e;}
+function T(s){return s.replace(/\{([A-Za-z])\}/g,'<i>$1</i>').replace(/\[([abc])\]/g,'<i class="c$1">$1</i>');}
+function fmt(n,d){d=(d===undefined)?2:d;if(!isFinite(n))return String(n);var k=Math.pow(10,d);var r=Math.round(n*k)/k;if(r===0)r=0;return String(r).replace('-',MINUS);}
+function num(s){return parseFloat(String(s).replace(/\u2212/g,'-').trim());}
+function rnd(n){return Math.floor(Math.random()*n);}
+function ri(a,b){return a+rnd(b-a+1);}
+function pick(arr){return arr[rnd(arr.length)];}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
+function disc(a,b,c){return Math.round((b*b-4*a*c)*1e6)/1e6;}
+
+function eqHTML(a,b,c,o){
+  o=o||{};var color=o.color!==false;
+  var terms=[[a,'<i>x</i>\u00B2','ca'],[b,'<i>x</i>','cb'],[c,'','cc']];
+  var out='',first=true;
+  terms.forEach(function(t){
+    var v=t[0];if(v===0)return;
+    var abs=Math.abs(v);var n=(abs===1&&t[1])?'':fmt(abs);
+    var body=n+t[1];var html=color?'<span class="'+t[2]+'">'+body+'</span>':body;
+    if(first){out+=(v<0?MINUS:'')+html;first=false;}
+    else{out+=(v<0?' '+MINUS+' ':' + ')+html;}
+  });
+  if(first)out='0';
+  return out;
+}
+
+/* ---------- progress ---------- */
+var PROG=[
+  ['basics','Spotted quadratics and named the coefficients'],
+  ['hose','Hit the window with the hose stream'],
+  ['anatomy','Toured every part of a parabola'],
+  ['explore','Changed a, b, and c and watched the graph'],
+  ['yint','Found three y-intercepts'],
+  ['zeros','Solved all three zero challenges'],
+  ['mirror','Placed a vertex using \u2212b/(2a)'],
+  ['steps','Analyzed the hose stream step by step'],
+  ['mission','Got a mission check fully correct']
+];
+var doneFlags={},backEl=null;
+function markDone(k){
+  if(doneFlags[k])return;doneFlags[k]=true;
+  if(!backEl)return;
+  var li=backEl.querySelector('.plist li[data-k="'+k+'"]');if(li)li.classList.add('on');
+  var c=backEl.querySelector('#pcount');if(c)c.textContent=Object.keys(doneFlags).length;
+}
+
+/* ---------- slider builder ---------- */
+function mkSlider(parent,o){
+  var lab=document.createElement('label');lab.className='sl';
+  lab.innerHTML='<span class="slname"><span>'+o.name+' =</span> <output></output></span><input type="range" min="'+o.min+'" max="'+o.max+'" step="'+o.step+'" value="'+o.val+'">';
+  var inp=lab.querySelector('input'),out=lab.querySelector('output');
+  function get(){return Math.round(parseFloat(inp.value)*1000)/1000;}
+  function upd(){out.textContent=(o.fmt?o.fmt(get()):fmt(get(),2));}
+  inp.addEventListener('input',function(){upd();if(o.on)o.on(get());});
+  upd();parent.appendChild(lab);
+  return {inp:inp,get:get,set:function(v){inp.value=v;upd();}};
+}
+
+/* ---------- graph component ---------- */
+var gid=0;
+function niceStep(range,target){
+  var raw=range/target;var p=Math.pow(10,Math.floor(Math.log10(raw)));var m=raw/p;
+  var n=m<1.5?1:(m<3.5?2:(m<7.5?5:10));return n*p;
+}
+function makeGraph(o){
+  var d={w:560,h:380,base:{xMin:-10,xMax:10,yMin:-10,yMax:10},auto:true,mini:false,ml:40,mr:14,mt:14,mb:28,gridStep:null,labelEvery:1,label:'Graph of a quadratic function'};
+  for(var k in o)d[k]=o[k];o=d;
+  if(o.mini){o.ml=o.mr=o.mt=o.mb=8;}
+  var id='gc'+(++gid);
+  var svg=S('svg',{viewBox:'0 0 '+o.w+' '+o.h,'class':'graph',role:'img','aria-label':o.label});
+  var PW=o.w-o.ml-o.mr,PH=o.h-o.mt-o.mb;
+  var defs=S('defs'),cp=S('clipPath',{id:id});
+  cp.appendChild(S('rect',{x:o.ml,y:o.mt,width:PW,height:PH}));defs.appendChild(cp);svg.appendChild(defs);
+  var gGrid=S('g'),gAx=S('g'),gCurve=S('g',{'clip-path':'url(#'+id+')'}),gF=S('g');
+  svg.appendChild(gGrid);svg.appendChild(gAx);svg.appendChild(gCurve);svg.appendChild(gF);
+  var view=null;
+  function px(x){return o.ml+(x-view.xMin)/(view.xMax-view.xMin)*PW;}
+  function py(y){return o.mt+PH-(y-view.yMin)/(view.yMax-view.yMin)*PH;}
+  function clampY(y){return Math.max(o.mt+12,Math.min(o.h-o.mb-5,y));}
+  function lab(g,text,X,Y,anchor){
+    var w=text.length*7,a=anchor||'start';
+    if(a==='start'&&X+w>o.w-o.mr){a='end';X-=14;}
+    else if(a==='end'&&X-w<o.ml){a='start';X+=14;}
+    else if(a==='middle'){if(X-w/2<o.ml){a='start';X=o.ml+3;}else if(X+w/2>o.w-o.mr){a='end';X=o.w-o.mr-3;}}
+    var t=S('text',{x:X,y:clampY(Y),'text-anchor':a,'class':'glab'});t.textContent=text;g.appendChild(t);
+  }
+  function dot(g,x,y,r,fill,stroke,ring){
+    if(ring&&!RM){
+      var rg=S('circle',{cx:px(x),cy:py(y),r:r+4,fill:'none',stroke:'#F0C040','stroke-width':3});
+      var an=S('animate',{attributeName:'r',values:(r+3)+';'+(r+11)+';'+(r+3),dur:'1.4s',repeatCount:'indefinite'});
+      rg.appendChild(an);g.appendChild(rg);
+    }
+    g.appendChild(S('circle',{cx:px(x),cy:py(y),r:r,fill:fill,stroke:stroke,'stroke-width':2.2}));
+  }
+  function draw(a,b,c,opt){
+    var p={yint:true,zeros:true,vertex:true,axis:true,focus:null,points:[],hlines:[],color:'#1a6fa3',range:null,labels:true};
+    for(var k in (opt||{}))p[k]=opt[k];
+    if(o.mini)p.labels=false;
+    var f=function(x){return a*x*x+b*x+c;};
+    var vx=null,vy=null,zs=[];
+    if(a!==0){
+      vx=-b/(2*a);vy=f(vx);var D=disc(a,b,c);
+      if(D>0){var s=Math.sqrt(D);zs=[(-b-s)/(2*a),(-b+s)/(2*a)].sort(function(m,n){return m-n;});}
+      else if(D===0){zs=[vx];}
+    }
+    var v;
+    if(p.range){v={xMin:p.range.xMin,xMax:p.range.xMax,yMin:p.range.yMin,yMax:p.range.yMax};}
+    else{
+      v={xMin:o.base.xMin,xMax:o.base.xMax,yMin:o.base.yMin,yMax:o.base.yMax};
+      if(o.auto){
+        var xs=[0],ys=[0,c];
+        if(vx!==null){xs.push(vx);ys.push(vy);}
+        zs.forEach(function(z){xs.push(z);});
+        p.points.forEach(function(q){xs.push(q.x);ys.push(q.y);});
+        var x0=Math.min.apply(null,xs),x1=Math.max.apply(null,xs),y0=Math.min.apply(null,ys),y1=Math.max.apply(null,ys);
+        var padx=Math.max(x1-x0,1)*0.12,pady=Math.max(y1-y0,1)*0.12;
+        if(x0<v.xMin)v.xMin=x0-padx;if(x1>v.xMax)v.xMax=x1+padx;
+        if(y0<v.yMin)v.yMin=y0-pady;if(y1>v.yMax)v.yMax=y1+pady;
+      }
+    }
+    view=v;
+    while(gGrid.firstChild)gGrid.removeChild(gGrid.firstChild);
+    while(gAx.firstChild)gAx.removeChild(gAx.firstChild);
+    while(gCurve.firstChild)gCurve.removeChild(gCurve.firstChild);
+    while(gF.firstChild)gF.removeChild(gF.firstChild);
+    gGrid.appendChild(S('rect',{x:o.ml,y:o.mt,width:PW,height:PH,fill:'#fff'}));
+    var sx=o.gridStep?o.gridStep[0]:niceStep(v.xMax-v.xMin,8);
+    var sy=o.gridStep?o.gridStep[1]:niceStep(v.yMax-v.yMin,7);
+    var skipX=[],skipY=[];
+    if(p.labels){
+      if(p.zeros)zs.forEach(function(z){skipX.push(z);});
+      if(vx!==null&&(p.vertex||p.axis))skipX.push(vx);
+      if(vx!==null&&p.vertex)skipY.push(vy);
+      if(p.yint)skipY.push(c);
+    }
+    function skipped(arr,val){return arr.some(function(z){return Math.abs(z-val)<1e-6*Math.max(1,Math.abs(val))+1e-6;});}
+    var i,xv,yv,t;
+    if(!o.mini){
+      for(i=Math.ceil(v.xMin/sx-1e-9);i*sx<=v.xMax+1e-9;i++){
+        xv=i*sx;if(i!==0)gGrid.appendChild(S('line',{x1:px(xv),y1:o.mt,x2:px(xv),y2:o.mt+PH,stroke:'#e1eaf2'}));
+        if(i!==0&&i%o.labelEvery===0&&!skipped(skipX,xv)){t=S('text',{x:px(xv),y:clampY(py(0)+15),'text-anchor':'middle','class':'gtick'});t.textContent=fmt(xv,2);gAx.appendChild(t);}
+      }
+      for(i=Math.ceil(v.yMin/sy-1e-9);i*sy<=v.yMax+1e-9;i++){
+        yv=i*sy;if(i!==0)gGrid.appendChild(S('line',{x1:o.ml,y1:py(yv),x2:o.ml+PW,y2:py(yv),stroke:'#e1eaf2'}));
+        if(i!==0&&i%o.labelEvery===0&&!skipped(skipY,yv)){
+          var tx=(v.xMin<=0&&v.xMax>=0)?px(0)-5:o.ml-5;
+          t=S('text',{x:Math.max(o.ml-4,tx),y:py(yv)+4,'text-anchor':'end','class':'gtick'});t.textContent=fmt(yv,2);gAx.appendChild(t);
+        }
+      }
+    }
+    gGrid.appendChild(S('rect',{x:o.ml,y:o.mt,width:PW,height:PH,fill:'none',stroke:'#c9d6e2'}));
+    if(v.xMin<=0&&v.xMax>=0)gAx.appendChild(S('line',{x1:px(0),y1:o.mt,x2:px(0),y2:o.mt+PH,stroke:'#1a3c5e','stroke-width':1.6}));
+    if(v.yMin<=0&&v.yMax>=0)gAx.appendChild(S('line',{x1:o.ml,y1:py(0),x2:o.ml+PW,y2:py(0),stroke:'#1a3c5e','stroke-width':1.6}));
+    if(!o.mini){
+      t=S('text',{x:o.ml+PW-8,y:clampY(py(0)-7),'text-anchor':'end','class':'gax'});t.textContent='x';gAx.appendChild(t);
+      t=S('text',{x:Math.min(o.ml+PW-10,px(0)+9),y:o.mt+14,'class':'gax'});t.textContent='y';gAx.appendChild(t);
+    }
+    var pts='',n=320;
+    for(i=0;i<=n;i++){
+      xv=v.xMin+(v.xMax-v.xMin)*i/n;var yy=f(xv);
+      var Y=Math.max(-1e5,Math.min(1e5,py(yy)));
+      pts+=(i?'L':'M')+px(xv).toFixed(1)+' '+Y.toFixed(1);
+    }
+    gCurve.appendChild(S('path',{d:pts,fill:'none',stroke:(p.focus==='dir'?'#F0C040':p.color),'stroke-width':(p.focus==='dir'?6:3.6),'stroke-linejoin':'round','class':'curve'}));
+    function fg(name){var g=S('g',{opacity:(p.focus&&p.focus!=='dir'&&p.focus!==name)?0.2:1});gF.appendChild(g);return g;}
+    p.hlines.forEach(function(h){gF.appendChild(S('line',{x1:px(h.x1),y1:py(h.y),x2:px(h.x2),y2:py(h.y),stroke:'#102a44','stroke-width':1.8,'stroke-dasharray':'4 4'}));});
+    var g;
+    if(p.axis&&vx!==null){
+      g=fg('axis');
+      g.appendChild(S('line',{x1:px(vx),y1:o.mt,x2:px(vx),y2:o.mt+PH,stroke:'#102a44','stroke-width':2.2,'stroke-dasharray':'8 5'}));
+      if(p.labels)lab(g,'x = '+fmt(vx),px(vx)+6,(a>0?o.mt+16:o.mt+PH-8),'start');
+      if(p.focus==='axis'&&!RM){}
+    }
+    if(p.zeros&&zs.length&&!(zs.length===1&&p.vertex)){
+      g=fg('zeros');
+      zs.forEach(function(z,idx){
+        dot(g,z,0,7,'#d1453b','#fff',p.focus==='zeros');
+        if(p.labels){
+          var left=(zs.length===1)||idx===0;
+          lab(g,'('+fmt(z)+', 0)',px(z)+(left?-9:9),py(0)+(a>0?20:-10),left?'end':'start');
+        }
+      });
+    }
+    if(p.yint){
+      g=fg('yint');dot(g,0,c,7,'#23895c','#fff',p.focus==='yint');
+      if(p.labels&&!(vx!==null&&p.vertex&&Math.abs(vx)<1e-9))lab(g,'(0, '+fmt(c)+')',px(0)+11,py(c)-9,'start');
+    }
+    if(p.vertex&&vx!==null){
+      g=fg('vertex');dot(g,vx,vy,8,'#F0C040','#102a44',p.focus==='vertex');
+      if(p.labels)lab(g,'('+fmt(vx)+', '+fmt(vy)+')',px(vx),py(vy)+(a>0?25:-15),'middle');
+    }
+    p.points.forEach(function(q){
+      var gg=S('g');gF.appendChild(gg);dot(gg,q.x,q.y,6,q.color||'#7b4fa0','#fff',false);
+      if(q.label&&p.labels)lab(gg,q.label,px(q.x)+(q.dx||10),py(q.y)+(q.dy||-9),q.anchor||'start');
+    });
+    if(p.focus==='dir'&&a!==0){
+      var tt=S('text',{x:o.ml+46,y:o.mt+22,'class':'glab'});
+      tt.textContent='a '+(a>0?'> 0':'< 0')+': opens '+(a>0?'up':'down');gF.appendChild(tt);
+    }
+  }
+  return {svg:svg,draw:draw,view:function(){return view;}};
+}
+
+/* ---------- page factory ---------- */
+function mk(html,cls){var d=document.createElement('div');d.className='page '+(cls||'');d.innerHTML=T(html);return d;}
+var ICONS={
+  water:'<path d="M12 3C12 3 5 11 5 15a7 7 0 0 0 14 0C19 11 12 3 12 3z"/>',
+  proj:'<path d="M3 19Q12 -4 21 19"/><circle cx="12" cy="6.5" r="1.8" fill="#fff"/>',
+  stop:'<path d="M4 17a8 8 0 0 1 16 0"/><path d="M12 17l4-5"/>',
+  area:'<rect x="4" y="6" width="16" height="12" rx="1"/>',
+  dish:'<path d="M4 6Q12 24 20 6"/><circle cx="12" cy="6" r="1.6" fill="#fff"/>',
+  bridge:'<path d="M3 19h18"/><path d="M6 6v13M18 6v13"/><path d="M3 5Q12 18 21 5"/>'
+};
+
+/* ===================== PAGES ===================== */
+var pages=[];
+
+/* P0 cover */
+(function(){
+  var el=mk('<h1>Quadratic<br>Equations</h1><p class="sub">An interactive field guide to parabolas, zeros, and vertices.</p>'+
+    '<svg class="art" viewBox="0 0 540 300" aria-hidden="true"></svg>'+
+    '<div class="row"><button class="btn amber" id="openBook">Open the book</button></div>'+
+    '<p class="hint">Turn pages with the arrow keys, the buttons below, or the page edges.</p>','cover');
+  var svg=el.querySelector('svg');
+  var gx=S('line',{x1:20,y1:250,x2:520,y2:250,stroke:'rgba(255,255,255,.35)','stroke-width':1.5});
+  var gy=S('line',{x1:270,y1:10,x2:270,y2:290,stroke:'rgba(255,255,255,.2)','stroke-width':1.5});
+  svg.appendChild(gx);svg.appendChild(gy);
+  var d='';for(var i=0;i<=60;i++){var x=40+(i/60)*460;var t=(x-270)/230;var y=250-210*(1-t*t);d+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);}
+  svg.appendChild(S('line',{x1:270,y1:36,x2:270,y2:250,stroke:'rgba(240,192,64,.55)','stroke-width':2,'stroke-dasharray':'7 6'}));
+  svg.appendChild(S('path',{d:d,fill:'none',stroke:'#F0C040','stroke-width':6,'stroke-linecap':'round','class':'curve'}));
+  svg.appendChild(S('circle',{cx:270,cy:40,r:9,fill:'#F0C040',stroke:'#fff','stroke-width':2.5}));
+  svg.appendChild(S('circle',{cx:40,cy:250,r:7,fill:'#d1453b',stroke:'#fff','stroke-width':2}));
+  svg.appendChild(S('circle',{cx:500,cy:250,r:7,fill:'#d1453b',stroke:'#fff','stroke-width':2}));
+  pages.push(el);
+})();
+
+/* P1 what is a quadratic equation */
+(function(){
+  var el=mk('<h1>What is a quadratic equation?</h1>'+
+  '<p class="lead">Look at these three equations. What do they have in common?</p>'+
+  '<div class="eqstack"><div class="eq">{x}\u00B2 '+MINUS+' 9 = 0</div><div class="eq">2{x}\u00B2 + 5{x} '+MINUS+' 3 = 0</div><div class="eq">'+MINUS+'0.5{x}\u00B2 + 4{x} = 0</div></div>'+
+  '<p>Each one has an {x}\u00B2 term. None has {x}\u00B3 or anything higher. That is the pattern.</p>'+
+  '<div class="note"><b>Quadratic equation.</b> An equation that can be written in standard form<div class="eq">[a]{x}\u00B2 + [b]{x} + [c] = 0</div>where [a] is not 0.</div>'+
+  '<p>"Quadratic" comes from the Latin word for square. The {x}\u00B2 term is the square. Multiply a side length by itself and you get an area. That is where the name comes from.</p>'+
+  '<h2>Reading the coefficients</h2>'+
+  '<p>[a] multiplies {x}\u00B2. [b] multiplies {x}. [c] stands alone. In 2{x}\u00B2 + 5{x} '+MINUS+' 3, you have [a] = 2, [b] = 5, and [c] = '+MINUS+'3.</p>'+
+  '<div class="warn"><b>Watch the signs and the gaps.</b> The sign belongs to the coefficient. In {x}\u00B2 '+MINUS+' 9, [a] = 1, [b] = 0 because the {x} term is missing, and [c] = '+MINUS+'9. The value of [a] can never be 0. Without the {x}\u00B2 term you only have a line.</div>'+
+  '<h2>Equation or function?</h2>'+
+  '<p>Write {y} = [a]{x}\u00B2 + [b]{x} + [c] and you have a function. Its graph is a parabola. Set {y} = 0 and you have an equation to solve. This book uses both.</p>');
+  pages.push(el);
+})();
+
+/* P2 practice: sort + coefficients */
+(function(){
+  var el=mk('<h1>Practice: spot the quadratics</h1>'+
+  '<p>Decide whether each expression is quadratic. You get feedback right away.</p>'+
+  '<div id="sl"></div>'+
+  '<div class="ask hide" id="rule"><b>Your rule.</b> A quadratic has {x} to the second power as its highest power. Lower powers can be missing. Higher powers, or {x} in a denominator, rule it out.</div>'+
+  '<h2>Name the coefficients</h2>'+
+  '<div class="eq big" id="ce"></div>'+
+  '<div class="coefrow"><label for="ia">[a] =</label><input id="ia" type="text" inputmode="decimal" autocomplete="off"><label for="ib">[b] =</label><input id="ib" type="text" inputmode="decimal" autocomplete="off"><label for="ic">[c] =</label><input id="ic" type="text" inputmode="decimal" autocomplete="off"></div>'+
+  '<div class="row" style="margin-top:8px"><button class="btn" id="cchk">Check</button><button class="btn ghost" id="cnew">New equation</button></div>'+
+  '<div class="fb" id="cfb"></div>');
+  var items=[
+    ['3{x}\u00B2 '+MINUS+' 2{x} + 5',1,'Yes. The highest power is 2.'],
+    ['2{x} + 7',0,'No. The highest power is 1, so this is a line.'],
+    ['{x}\u00B3 + {x}\u00B2 '+MINUS+' 4',0,'No. The {x}\u00B3 term makes it a cubic.'],
+    ['5{x}\u00B2',1,'Yes. Here [b] = 0 and [c] = 0, and it still counts.'],
+    ['({x} '+MINUS+' 3)({x} + 2)',1,'Yes. Multiply it out and you get {x}\u00B2 '+MINUS+' {x} '+MINUS+' 6.'],
+    ['4 / {x} + 1',0,'No. {x} sits in a denominator. That is not a power of 2.']
+  ];
+  var list=el.querySelector('#sl'),correct=0,sortDone=false,coefDone=false;
+  items.forEach(function(it){
+    var row=document.createElement('div');row.className='srow';
+    row.innerHTML=T('<span class="sx">'+it[0]+'</span><button class="choice" data-v="1">Quadratic</button><button class="choice" data-v="0">Not quadratic</button><div class="sfb"></div>');
+    var answered=false;
+    row.querySelectorAll('.choice').forEach(function(b){
+      b.addEventListener('click',function(){
+        if(answered)return;
+        var ok=(parseInt(b.getAttribute('data-v'),10)===it[1]);
+        var fb=row.querySelector('.sfb');
+        if(ok){answered=true;b.classList.add('right');fb.className='sfb good';fb.innerHTML=T(it[2]);correct++;
+          row.querySelectorAll('.choice').forEach(function(x){x.disabled=true;if(x!==b)x.style.display='none';});
+          if(correct===items.length){el.querySelector('#rule').classList.remove('hide');sortDone=true;if(coefDone)markDone('basics');}
+        }else{b.classList.add('wrong');fb.className='sfb nope';fb.textContent='Not quite. Check the highest power of x.';}
+      });
+    });
+    list.appendChild(row);
+  });
+  var A,B,C;
+  function newCoef(){
+    A=pick([-3,-2,-1,1,2,3,4]);B=(Math.random()<0.25)?0:ri(-7,7);C=(Math.random()<0.25)?0:ri(-9,9);
+    el.querySelector('#ce').innerHTML=eqHTML(A,B,C,{color:false})+' = 0';
+    ['ia','ib','ic'].forEach(function(id){var i=el.querySelector('#'+id);i.value='';i.className='';});
+    var fb=el.querySelector('#cfb');fb.textContent='';fb.className='fb';
+  }
+  el.querySelector('#cnew').addEventListener('click',newCoef);
+  el.querySelector('#cchk').addEventListener('click',function(){
+    var vals=[A,B,C],ids=['ia','ib','ic'],all=true;
+    ids.forEach(function(id,i){var inp=el.querySelector('#'+id);var ok=(num(inp.value)===vals[i]);inp.className=ok?'ok':'bad';if(!ok)all=false;});
+    var fb=el.querySelector('#cfb');
+    if(all){fb.className='fb good';fb.textContent='Correct. Click New equation to try another.';coefDone=true;if(sortDone)markDone('basics');}
+    else{fb.className='fb nope';fb.textContent='Check the signs. A missing term means that coefficient is 0.';}
+  });
+  newCoef();
+  pages.push(el);
+})();
+
+/* P3 where quadratics show up */
+(function(){
+  var cards=[
+    ['water','Water streams','A hose stream leaves the nozzle, climbs, and falls. Gravity pulls it down at a steady rate, so its height follows a parabola: {h} = [a]{x}\u00B2 + [b]{x} + [c] with [a] negative. You will aim one on the next page.'],
+    ['proj','Projectiles','Without air resistance, any thrown or fired object follows a parabola. A mortar team uses a high arc to clear obstacles. Fire-control data adds wind and drag, but the starting point is the same quadratic.'],
+    ['stop','Stopping distance','Braking distance grows with the square of speed. Double the speed and the distance becomes four times as long. Apparatus drivers plan around that.'],
+    ['area','Fenced area','A crew has 200 ft of barrier tape for a rectangular staging area. If one side is {w}, the other is 100 '+MINUS+' {w}. Area = {w}(100 '+MINUS+' {w}) = '+MINUS+'{w}\u00B2 + 100{w}. The vertex gives the best size: 50 ft by 50 ft, or 2,500 sq ft.'],
+    ['dish','Dishes and reflectors','A parabolic dish sends every incoming signal to one point, the focus. Radar, satellite dishes, and searchlight reflectors all use this shape.'],
+    ['bridge','Bridge cables','The main cable of a suspension bridge hangs in a parabola when the deck weight is spread evenly along its length.']
+  ];
+  var html='<h1>Where quadratics show up</h1><p class="lead">A quadratic appears whenever a quantity depends on a square. Tap a situation to see why.</p><div id="cards"></div>'+
+    '<div class="ask"><b>Keep this question in mind.</b> Which of these have a highest point? Which have a lowest point? The vertex answers it, and you will find it later in this book.</div>';
+  var el=mk(html);
+  var box=el.querySelector('#cards');
+  cards.forEach(function(c,i){
+    var d=document.createElement('div');d.className='card'+(i===0?' open':'');
+    d.innerHTML='<button class="ch" aria-expanded="'+(i===0)+'"><span class="ic"><svg viewBox="0 0 24 24">'+ICONS[c[0]]+'</svg></span><span>'+c[1]+'</span><span class="chev">'+(i===0?MINUS:'+')+'</span></button><div class="cbody">'+T(c[2])+'</div>';
+    d.querySelector('.ch').addEventListener('click',function(){
+      var wasOpen=d.classList.contains('open');
+      Array.prototype.forEach.call(box.children,function(c){c.classList.remove('open');c.querySelector('.ch').setAttribute('aria-expanded','false');c.querySelector('.chev').textContent='+';});
+      if(!wasOpen){d.classList.add('open');d.querySelector('.ch').setAttribute('aria-expanded','true');d.querySelector('.chev').textContent=MINUS;}
+    });
+    box.appendChild(d);
+  });
+  pages.push(el);
+})();
+
+/* P4 hose simulator */
+(function(){
+  var el=mk('<h1>Try it: reach the window</h1>'+
+  '<p>The nozzle is 3 ft above the ground. Set the angle and speed so the stream enters the window.</p>'+
+  '<svg id="scene" class="graph" viewBox="0 0 560 270" role="img" aria-label="Side view of a hose stream aimed at a window"></svg>'+
+  '<div class="hose-status" id="hst"></div>'+
+  '<div id="hs" class="slrow"></div>'+
+  '<div class="row"><button class="btn ghost" id="hnew">New target</button><span class="tiny" id="heq"></span></div>'+
+  '<div class="ask"><b>Challenge.</b> Find two different angles that hit the window at the same speed. Then look at [a]. It is negative every time. What does that say about the shape of the stream?</div>');
+  var ML=36,MB=26,MT=10,MR=10,W=560,H=270,PW=W-ML-MR,PH=H-MT-MB,XR=120,K=PW/XR,YR=PH/K;
+  function px(x){return ML+x*K;}function py(y){return MT+PH-y*K;}
+  var svg=el.querySelector('#scene');
+  var D=45,Hh=24,G=32.2;
+  var angle,speed;
+  var hs=el.querySelector('#hs');
+  angle=mkSlider(hs,{name:'Angle',min:20,max:80,step:1,val:50,fmt:function(v){return v+'\u00B0';},on:render});
+  speed=mkSlider(hs,{name:'Speed',min:30,max:75,step:1,val:55,fmt:function(v){return v+' ft/s';},on:render});
+  function target(){D=pick([30,35,40,45,50,55,60]);Hh=pick([12,18,24,30,36]);}
+  function render(){
+    var th=angle.get()*Math.PI/180,v=speed.get();
+    var a=-G/(2*v*v*Math.cos(th)*Math.cos(th)),b=Math.tan(th),c=3;
+    var f=function(x){return a*x*x+b*x+c;};
+    var Dd=b*b-4*a*c;var land=(-b-Math.sqrt(Dd))/(2*a);
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    svg.appendChild(S('rect',{x:ML,y:MT,width:PW,height:PH,fill:'#eaf5fc'}));
+    var i,t;
+    for(i=0;i<=XR;i+=10){
+      svg.appendChild(S('line',{x1:px(i),y1:MT,x2:px(i),y2:MT+PH,stroke:'#d3e3f0'}));
+      if(i%20===0){t=S('text',{x:px(i),y:H-9,'text-anchor':'middle','class':'gtick'});t.textContent=i;svg.appendChild(t);}
+    }
+    for(i=10;i<=50;i+=10){
+      svg.appendChild(S('line',{x1:ML,y1:py(i),x2:ML+PW,y2:py(i),stroke:'#d3e3f0'}));
+      t=S('text',{x:ML-5,y:py(i)+4,'text-anchor':'end','class':'gtick'});t.textContent=i;svg.appendChild(t);
+    }
+    svg.appendChild(S('rect',{x:ML,y:py(0),width:PW,height:6,fill:'#7a8b6a'}));
+    svg.appendChild(S('rect',{x:px(D),y:py(50),width:10*K,height:50*K,fill:'#1a3c5e'}));
+    svg.appendChild(S('rect',{x:px(D),y:py(Hh+3),width:10*K,height:6*K,fill:'#F0C040'}));
+    t=S('text',{x:px(D)+5*K,y:py(50)-5,'text-anchor':'middle','class':'glab'});t.textContent='wall, '+D+' ft out';svg.appendChild(t);
+    var xe=Math.min(D,land,XR),path='';
+    for(i=0;i<=120;i++){var x=xe*i/120;path+=(i?'L':'M')+px(x).toFixed(1)+' '+py(f(x)).toFixed(1);}
+    var gC=S('g',{'clip-path':'inset(0)'});
+    var cpd=S('defs'),cpc=S('clipPath',{id:'hoseclip'});cpc.appendChild(S('rect',{x:ML,y:MT,width:PW,height:PH}));cpd.appendChild(cpc);svg.appendChild(cpd);
+    svg.appendChild(S('path',{d:path,fill:'none',stroke:'#1a8fd1','stroke-width':4.5,'stroke-linecap':'round','clip-path':'url(#hoseclip)'}));
+    svg.appendChild(S('circle',{cx:px(0),cy:py(3),r:6,fill:'#d1453b',stroke:'#fff','stroke-width':2}));
+    var yw=f(D),status,cls;
+    var lo=Hh-3,hi=Hh+3;
+    if(land<D){status='Falls short. The stream lands '+fmt(land,1)+' ft from the nozzle. The wall is '+D+' ft away.';cls='nope';
+      svg.appendChild(S('circle',{cx:px(land),cy:py(0),r:5,fill:'#d1453b'}));}
+    else{
+      svg.appendChild(S('circle',{cx:px(D),cy:py(Math.max(0,Math.min(yw,YR))),r:6,fill:'#fff',stroke:'#1a8fd1','stroke-width':3}));
+      if(yw>=lo&&yw<=hi){status='On target. The stream reaches the wall at '+fmt(yw,1)+' ft, inside the window.';cls='good';markDone('hose');}
+      else if(yw>hi){status='Too high. The stream reaches the wall at '+fmt(yw,1)+' ft. The window spans '+lo+' to '+hi+' ft.';cls='nope';}
+      else{status='Too low. The stream reaches the wall at '+fmt(yw,1)+' ft. The window spans '+lo+' to '+hi+' ft.';cls='nope';}
+    }
+    var st=el.querySelector('#hst');st.className='hose-status '+cls;st.textContent=status;
+    el.querySelector('#heq').innerHTML=T('{h}({x}) = <span class="ca">'+fmt(a,4)+'</span>{x}\u00B2 + <span class="cb">'+fmt(b,2)+'</span>{x} + <span class="cc">3</span>');
+  }
+  el.querySelector('#hnew').addEventListener('click',function(){target();render();});
+  target();D=45;Hh=24;render();
+  pages.push(el);
+})();
+
+/* P5 anatomy */
+(function(){
+  var el=mk('<h1>Meet the parabola</h1>'+
+  '<p>The graph of {y} = [a]{x}\u00B2 + [b]{x} + [c] is a parabola, a smooth U-shaped curve. Five features describe every one. Tap each feature to find it on the graph.</p>'+
+  '<div class="chips" id="chips"></div>'+
+  '<div id="gwrap"></div>'+
+  '<div class="note" id="fdesc" style="min-height:62px"></div>'+
+  '<div class="row"><button class="btn ghost" id="flip">Flip it upside down</button><span class="tiny" id="feq"></span></div>');
+  var g=makeGraph({w:560,h:330,base:{xMin:-2,xMax:6,yMin:-3,yMax:5}});
+  el.querySelector('#gwrap').appendChild(g.svg);
+  var up=true,focus='dir',seen={};
+  var feats=[
+    ['dir','Opens up or down','The sign of [a] decides it. [a] > 0 opens up. [a] < 0 opens down.'],
+    ['yint','y-intercept','Where the graph crosses the y-axis. It is always the point (0, [c]).'],
+    ['zeros','x-intercepts','Where the graph crosses the x-axis. The x-values there are the zeros.'],
+    ['axis','Axis of symmetry','A vertical mirror line through the middle of the parabola: {x} = '+MINUS+'[b]/(2[a]).'],
+    ['vertex','Vertex','The turning point. It is the lowest point if the parabola opens up and the highest if it opens down.']
+  ];
+  var chips=el.querySelector('#chips');
+  feats.forEach(function(f){
+    var b=document.createElement('button');b.className='chip';b.textContent=f[1];b.setAttribute('data-k',f[0]);
+    b.addEventListener('click',function(){focus=f[0];seen[f[0]]=true;b.classList.add('seen');redraw();
+      if(Object.keys(seen).length===feats.length)markDone('anatomy');});
+    chips.appendChild(b);
+  });
+  function redraw(){
+    var a=up?1:-1,b=up?-4:4,c=up?3:-3;
+    g.draw(a,b,c,{focus:focus});
+    chips.querySelectorAll('.chip').forEach(function(ch){ch.classList.toggle('on',ch.getAttribute('data-k')===focus);});
+    var f=feats.filter(function(x){return x[0]===focus;})[0];
+    el.querySelector('#fdesc').innerHTML=T('<b>'+f[1]+'.</b> '+f[2]);
+    el.querySelector('#feq').innerHTML=T('{y} = '+eqHTML(a,b,c));
+  }
+  el.querySelector('#flip').addEventListener('click',function(){up=!up;redraw();});
+  redraw();
+  pages.push(el);
+})();
+
+/* P6 explorer */
+(function(){
+  var el=mk('<h1>Try it: change a, b, and c</h1>'+
+  '<div class="eq" id="xeq"></div>'+
+  '<div id="gwrap"></div>'+
+  '<div id="ctl" class="slrow"></div>'+
+  '<div class="readout" id="ro"></div>'+
+  '<div class="ask"><b>Try this.</b> Tap each question after you have tested it.'+
+  '<details><summary>Set [b] = 0 and [c] = 0. Slide [a] from negative to positive.</summary><p>[a] > 0 opens up. [a] < 0 opens down. A larger size of [a] makes the parabola narrower. At [a] = 0 it flattens into a line.</p></details>'+
+  '<details><summary>Slide only [c]. What moves and what stays?</summary><p>The whole graph shifts up or down. The shape stays the same. The green point always sits at (0, [c]).</p></details>'+
+  '<details><summary>Slide only [b]. Watch the vertex and the green point.</summary><p>The vertex moves sideways and vertically. The green point does not move. The y-intercept depends only on [c].</p></details>'+
+  '<details><summary>Can you float the graph above the x-axis with no zeros?</summary><p>Yes. With [a] > 0, the vertex must be above the x-axis. No vertex below the axis, no crossing.</p></details></div>');
+  var g=makeGraph({w:560,h:280});el.querySelector('#gwrap').appendChild(g.svg);
+  var moved={};
+  var ctl=el.querySelector('#ctl');
+  var sa,sb,sc;
+  function chg(k){return function(){moved[k]=true;if(moved.a&&moved.b&&moved.c)markDone('explore');upd();};}
+  sa=mkSlider(ctl,{name:'<i class="ca">a</i>',min:-3,max:3,step:0.1,val:1,on:chg('a')});
+  sb=mkSlider(ctl,{name:'<i class="cb">b</i>',min:-10,max:10,step:0.5,val:-2,on:chg('b')});
+  sc=mkSlider(ctl,{name:'<i class="cc">c</i>',min:-10,max:10,step:1,val:-3,on:chg('c')});
+  function upd(){
+    var a=sa.get(),b=sb.get(),c=sc.get();
+    el.querySelector('#xeq').innerHTML=T('{y} = '+eqHTML(a,b,c));
+    g.draw(a,b,c);
+    var ro=el.querySelector('#ro');
+    if(a===0){ro.innerHTML='<div style="grid-column:1/-1"><b>[a] = 0.</b> There is no {x}\u00B2 term, so this is a line, not a parabola.</div>';ro.innerHTML=T(ro.innerHTML);return;}
+    var vx=-b/(2*a),vy=a*vx*vx+b*vx+c,D=disc(a,b,c);
+    var zt=D>0?'two ('+fmt((-b-Math.sqrt(D))/(2*a))+' and '+fmt((-b+Math.sqrt(D))/(2*a))+')':(D===0?'one ('+fmt(vx)+')':'none');
+    ro.innerHTML=T('<div><b>Opens:</b> '+(a>0?'up':'down')+'</div><div><b>y-intercept:</b> (0, '+fmt(c)+')</div><div><b>Vertex:</b> ('+fmt(vx)+', '+fmt(vy)+')</div><div><b>Zeros:</b> '+zt+'</div>');
+  }
+  upd();
+  pages.push(el);
+})();
+
+/* P7 y-intercept lesson */
+(function(){
+  var el=mk('<h1>The y-intercept</h1>'+
+  '<p class="lead">The y-intercept is the point where the graph crosses the y-axis.</p>'+
+  '<p>Every point on the y-axis has {x} = 0. So put {x} = 0 into the function:</p>'+
+  '<div class="eq">{y} = [a](0)\u00B2 + [b](0) + [c] = [c]</div>'+
+  '<div class="note"><b>Rule.</b> The y-intercept of {y} = [a]{x}\u00B2 + [b]{x} + [c] is always the point (0, [c]).</div>'+
+  '<h2>Examples</h2>'+
+  '<div class="eqstack"><div class="eq">{y} = 2{x}\u00B2 '+MINUS+' 5{x} + <span class="cc">3</span></div><div class="eq">y-intercept: (0, 3)</div></div>'+
+  '<div class="eqstack"><div class="eq">{y} = {x}\u00B2 '+MINUS+' <span class="cc">9</span></div><div class="eq">y-intercept: (0, '+MINUS+'9)</div></div>'+
+  '<div class="eqstack"><div class="eq">{y} = '+MINUS+'3{x}\u00B2 + 6{x}</div><div class="eq">[c] = 0, so (0, 0)</div></div>'+
+  '<p>The last graph passes through the origin because there is no constant term.</p>'+
+  '<div class="note"><b>In the real world.</b> [c] is the starting value. In the hose model, [c] = 3 ft is the nozzle height. At {x} = 0 the stream has not traveled anywhere yet, so it is still at the nozzle.</div>'+
+  '<div class="warn"><b>Common mistake.</b> The y-intercept is a point, so write (0, [c]). The number [c] alone is only its y-coordinate. Changing [a] or [b] never moves it. You will test that on the next page.</div>');
+  pages.push(el);
+})();
+
+/* P8 y-int practice */
+(function(){
+  var el=mk('<h1>Practice: find the y-intercept</h1>'+
+  '<div class="tabs"><button class="on" data-m="eq">From the equation</button><button data-m="gr">From the graph</button></div>'+
+  '<div class="eq big" id="peq"></div>'+
+  '<div id="gwrap"></div>'+
+  '<div class="coefrow" style="margin-top:10px"><span style="font:600 20px var(--serif)">y-intercept: (0,</span><input id="yi" type="text" inputmode="decimal" autocomplete="off"><span style="font:600 20px var(--serif)">)</span><button class="btn" id="ychk">Check</button><button class="btn ghost" id="ynew">New problem</button></div>'+
+  '<div class="fb" id="yfb"></div>'+
+  '<div class="tiny" id="ycount"></div>'+
+  '<div id="demo"><h2>Test the rule</h2><p>Change [a] and [b]. The green point does not move, because [c] is fixed at 2.</p><div id="dg"></div><div id="dctl" class="slrow"></div></div>');
+  var g=makeGraph({w:560,h:340,base:{xMin:-6,xMax:6,yMin:-12,yMax:12},auto:false,gridStep:[1,1],labelEvery:2});
+  el.querySelector('#gwrap').appendChild(g.svg);
+  var mode='eq',A,B,C,answered=false,right=0;
+  function newP(){
+    A=pick([-2,-1,-0.5,0.5,1,2]);B=ri(-4,4);C=ri(-8,8);answered=false;
+    var inp=el.querySelector('#yi');inp.value='';inp.className='';
+    var fb=el.querySelector('#yfb');fb.textContent='';fb.className='fb';
+    paint();
+  }
+  var g2=makeGraph({w:560,h:210,base:{xMin:-6,xMax:6,yMin:-6,yMax:10}});
+  el.querySelector('#dg').appendChild(g2.svg);
+  var da,db;
+  function drawDemo(){g2.draw(da.get(),db.get(),2,{zeros:false,vertex:false,axis:false});}
+  da=mkSlider(el.querySelector('#dctl'),{name:'<i class="ca">a</i>',min:-3,max:3,step:0.1,val:1,on:drawDemo});
+  db=mkSlider(el.querySelector('#dctl'),{name:'<i class="cb">b</i>',min:-8,max:8,step:0.5,val:2,on:drawDemo});
+  drawDemo();
+  function paint(){
+    var peq=el.querySelector('#peq'),demo=el.querySelector('#demo');
+    demo.style.display=(mode==='eq')?'':'none';
+    if(mode==='eq'){peq.innerHTML=T('{y} = '+eqHTML(A,B,C,{color:answered}));peq.style.display='';g.svg.style.display='none';
+    }else{
+      g.svg.style.display='';
+      if(answered){peq.style.display='';peq.innerHTML=T('{y} = '+eqHTML(A,B,C));g.draw(A,B,C,{zeros:false,vertex:false,axis:false});}
+      else{peq.style.display='none';g.draw(A,B,C,{yint:false,zeros:false,vertex:false,axis:false});}
+    }
+    el.querySelector('#ycount').textContent='Correct so far: '+right+' (three earns a check on the back cover)';
+  }
+  el.querySelectorAll('.tabs button').forEach(function(b){
+    b.addEventListener('click',function(){
+      mode=b.getAttribute('data-m');
+      el.querySelectorAll('.tabs button').forEach(function(x){x.classList.toggle('on',x===b);});
+      newP();
+    });
+  });
+  el.querySelector('#ynew').addEventListener('click',newP);
+  el.querySelector('#ychk').addEventListener('click',function(){
+    var inp=el.querySelector('#yi'),fb=el.querySelector('#yfb');
+    if(answered)return;
+    var ok=(num(inp.value)===C);inp.className=ok?'ok':'bad';
+    if(ok){answered=true;right++;fb.className='fb good';fb.textContent='Correct. The y-intercept is (0, '+fmt(C)+').';if(right>=3)markDone('yint');paint();}
+    else{fb.className='fb nope';fb.textContent=(mode==='eq'?'Look for the constant term, the one with no x.':'Find where the curve crosses the vertical axis.');}
+  });
+  newP();
+  pages.push(el);
+})();
+
+/* P9 zeros lesson */
+(function(){
+  var el=mk('<h1>X-intercepts and zeros</h1>'+
+  '<p class="lead">The x-intercepts are where the graph crosses the x-axis. There, {y} = 0.</p>'+
+  '<p>So set [a]{x}\u00B2 + [b]{x} + [c] = 0 and solve. The solutions are the <b>zeros</b>, also called roots. A zero is a number, like 3. An x-intercept is a point, like (3, 0).</p>'+
+  '<div class="pmini" id="minis"></div>'+
+  '<div class="note"><b>The discriminant</b> {D} = [b]\u00B2 '+MINUS+' 4[a][c] tells you how many zeros to expect. {D} > 0 gives two. {D} = 0 gives one. {D} < 0 gives none.</div>'+
+  '<h2>Two ways to find them</h2>'+
+  '<p><b>Factor.</b> {x}\u00B2 '+MINUS+' 5{x} + 6 = ({x} '+MINUS+' 2)({x} '+MINUS+' 3), so the zeros are 2 and 3.</p>'+
+  '<p><b>Quadratic formula.</b> It always works.</p>'+
+  '<div class="eq">{x} = ('+MINUS+'[b] \u00B1 \u221A([b]\u00B2 '+MINUS+' 4[a][c])) / (2[a])</div>'+
+  '<p>Try 2{x}\u00B2 + 3{x} '+MINUS+' 2 = 0. Here {D} = 9 + 16 = 25, so {x} = ('+MINUS+'3 \u00B1 5) / 4. The zeros are 1/2 and '+MINUS+'2.</p>'+
+  '<div class="note"><b>In the real world.</b> Zeros answer the question "when does it hit the ground?" In the hose model, the positive zero is where the stream lands.</div>');
+  var box=el.querySelector('#minis');
+  [['Two zeros',1,0,-1],['One zero',1,0,0],['No zeros',1,0,1]].forEach(function(m){
+    var f=document.createElement('figure');
+    var g=makeGraph({w:180,h:105,mini:true,base:{xMin:-3,xMax:3,yMin:-2,yMax:4},auto:false});
+    g.draw(m[1],m[2],m[3],{yint:false,vertex:(m[0]==='One zero'),axis:false,zeros:true});
+    f.appendChild(g.svg);
+    var cap=document.createElement('figcaption');cap.innerHTML=T(m[0]);f.appendChild(cap);box.appendChild(f);
+  });
+  pages.push(el);
+})();
+
+/* P10 zero hunter */
+(function(){
+  var el=mk('<h1>Try it: zero hunter</h1>'+
+  '<div id="gwrap"></div><div id="ctl" class="slrow"></div>'+
+  '<div class="work" id="wk"></div>'+
+  '<h2 style="margin-top:8px">Challenges</h2>'+
+  '<div id="chl"></div>');
+  var g=makeGraph({w:560,h:270});el.querySelector('#gwrap').appendChild(g.svg);
+  var ctl=el.querySelector('#ctl');
+  var sa=mkSlider(ctl,{name:'<i class="ca">a</i>',min:-3,max:3,step:0.1,val:1,on:upd});
+  var sb=mkSlider(ctl,{name:'<i class="cb">b</i>',min:-12,max:12,step:0.5,val:0,on:upd});
+  var sc=mkSlider(ctl,{name:'<i class="cc">c</i>',min:-12,max:12,step:1,val:-4,on:upd});
+  var chals=[
+    ['Make the zeros exactly {x} = 2 and {x} = 5.',function(a,b,c,D,zs){return a!==0&&D>0&&Math.abs(zs[0]-2)<1e-6&&Math.abs(zs[1]-5)<1e-6;}],
+    ['Make the graph touch the x-axis at exactly one point.',function(a,b,c,D){return a!==0&&D===0;}],
+    ['Make a parabola that opens down and never touches the x-axis.',function(a,b,c,D){return a<0&&D<0;}]
+  ];
+  var solved=[false,false,false],chl=el.querySelector('#chl'),rows=[];
+  chals.forEach(function(c){var d=document.createElement('div');d.className='chal';d.innerHTML=T('<span class="mark"></span><span>'+c[0]+'</span>');chl.appendChild(d);rows.push(d);});
+  function upd(){
+    var a=sa.get(),b=sb.get(),c=sc.get(),D=disc(a,b,c),zs=[];
+    g.draw(a,b,c);
+    var wk=el.querySelector('#wk');
+    if(a===0){wk.innerHTML=T('<div><b>[a] = 0.</b> No {x}\u00B2 term, so this is a line. Move [a] away from 0.</div>');}
+    else{
+      if(D>0){var s=Math.sqrt(D);zs=[(-b-s)/(2*a),(-b+s)/(2*a)].sort(function(m,n){return m-n;});}
+      else if(D===0)zs=[-b/(2*a)];
+      var res=D>0?'{D} > 0: two zeros, {x} = '+fmt(zs[0])+' and '+fmt(zs[1]):(D===0?'{D} = 0: one zero, {x} = '+fmt(zs[0]):'{D} < 0: no zeros');
+      wk.innerHTML=T('<div>{D} = [b]\u00B2 '+MINUS+' 4[a][c] = ('+fmt(b)+')\u00B2 '+MINUS+' 4('+fmt(a)+')('+fmt(c)+') = <b>'+fmt(D)+'</b></div><div>'+res+'</div>');
+    }
+    chals.forEach(function(ch,i){
+      if(!solved[i]&&ch[1](a,b,c,D,zs)){solved[i]=true;rows[i].classList.add('solved');}
+    });
+    if(solved[0]&&solved[1]&&solved[2])markDone('zeros');
+  }
+  upd();
+  pages.push(el);
+})();
+
+/* P11 symmetry and vertex lesson */
+(function(){
+  var el=mk('<h1>Symmetry and the vertex</h1>'+
+  '<p class="lead">Fold a parabola along a vertical line through its turning point. The two halves match. That line is the <b>axis of symmetry</b>.</p>'+
+  '<p>The quadratic formula shows why. The two zeros are </p>'+
+  '<div class="eq">('+MINUS+'[b])/(2[a]) \u00B1 \u221A{D}/(2[a])</div>'+
+  '<p>The same distance on each side of '+MINUS+'[b]/(2[a]). So the axis passes through the midpoint of the zeros.</p>'+
+  '<div class="note"><b>Axis of symmetry:</b> {x} = '+MINUS+'[b]/(2[a]). <b>Vertex:</b> the point where the axis meets the parabola. Find {h} = '+MINUS+'[b]/(2[a]) first, then {k} = {f}({h}). The vertex is ({h}, {k}).</div>'+
+  '<p>If [a] > 0 the vertex is the lowest point, a minimum. If [a] < 0 it is the highest point, a maximum.</p>'+
+  '<div id="gwrap"></div>'+
+  '<p><b>Example:</b> {y} = '+MINUS+'2{x}\u00B2 + 8{x} + 1. Then {h} = '+MINUS+'8/(2('+MINUS+'2)) = 2 and {k} = '+MINUS+'2(4) + 16 + 1 = 9. The axis is {x} = 2 and the vertex is (2, 9), a maximum.</p>'+
+  '<div class="warn"><b>Common mistake.</b> The axis is a line, so write {x} = 2. The vertex is a point, so write (2, 9).</div>');
+  var g=makeGraph({w:560,h:190,base:{xMin:-2,xMax:5,yMin:-2,yMax:10},ml:36,mt:10,mb:22});
+  el.querySelector('#gwrap').appendChild(g.svg);g.draw(-2,8,1,{});
+  pages.push(el);
+})();
+
+/* P12 mirror test */
+(function(){
+  var el=mk('<h1>Try it: the mirror test</h1>'+
+  '<div id="gwrap"></div><div id="ctl" class="slgrid"></div>'+
+  '<div class="work" id="wk"></div>'+
+  '<div class="chal" id="tchal"><span class="mark"></span><span id="ttxt"></span></div>'+
+  '<div class="row"><button class="btn ghost" id="tnew">New target</button></div>');
+  var g=makeGraph({w:560,h:250,base:{xMin:-6,xMax:6,yMin:-6,yMax:8}});el.querySelector('#gwrap').appendChild(g.svg);
+  var ctl=el.querySelector('#ctl');
+  var sa=mkSlider(ctl,{name:'<i class="ca">a</i>',min:-3,max:3,step:0.1,val:-1,on:upd});
+  var sb=mkSlider(ctl,{name:'<i class="cb">b</i>',min:-12,max:12,step:0.5,val:2,on:upd});
+  var sc=mkSlider(ctl,{name:'<i class="cc">c</i>',min:-10,max:10,step:1,val:3,on:upd});
+  var sx=mkSlider(ctl,{name:'Point P at <i>x</i>',min:-8,max:8,step:0.5,val:-2,on:upd});
+  var targets=[[3,5],[-2,-4],[1,6],[2,-3],[-1,4]],tg=targets[0],tdone=false;
+  function setT(){el.querySelector('#ttxt').innerHTML=T('<b>Challenge:</b> move the vertex to ('+fmt(tg[0])+', '+fmt(tg[1])+').');el.querySelector('#tchal').classList.remove('solved');tdone=false;}
+  el.querySelector('#tnew').addEventListener('click',function(){var n;do{n=pick(targets);}while(n===tg);tg=n;setT();upd();});
+  function upd(){
+    var a=sa.get(),b=sb.get(),c=sc.get(),x=sx.get(),wk=el.querySelector('#wk');
+    if(a===0){g.draw(a,b,c,{vertex:false,axis:false});wk.innerHTML=T('<div><b>[a] = 0.</b> A line has no axis of symmetry or vertex. Move [a] away from 0.</div>');return;}
+    var h=-b/(2*a),k=a*h*h+b*h+c,y=a*x*x+b*x+c,x2=2*h-x;
+    g.draw(a,b,c,{points:[{x:x,y:y,color:'#7b4fa0',label:'P',dx:8,dy:-9},{x:x2,y:y,color:'#7b4fa0',label:'P\u2032',dx:8,dy:-9}],hlines:[{x1:Math.min(x,x2),x2:Math.max(x,x2),y:y}]});
+    wk.innerHTML=T('<div>{h} = '+MINUS+'[b]/(2[a]) = '+MINUS+'('+fmt(b)+')/(2('+fmt(a)+')) = <b>'+fmt(h)+'</b></div>'+
+      '<div>{k} = {f}('+fmt(h)+') = <b>'+fmt(k)+'</b>. Vertex: ('+fmt(h)+', '+fmt(k)+')</div>'+
+      '<div>P = ('+fmt(x)+', '+fmt(y)+'). Its mirror P\u2032 = ('+fmt(x2)+', '+fmt(y)+'). Same height, equal distance from the axis.</div>');
+    if(!tdone&&Math.abs(h-tg[0])<1e-6&&Math.abs(k-tg[1])<1e-6){tdone=true;el.querySelector('#tchal').classList.add('solved');markDone('mirror');}
+  }
+  setT();upd();
+  pages.push(el);
+})();
+
+/* P13 cheat sheet */
+(function(){
+  var el=mk('<h1>The full picture</h1>'+
+  '<p class="lead">For {y} = [a]{x}\u00B2 + [b]{x} + [c], five features tell the whole story.</p>'+
+  '<table class="tbl"><tr><th>Feature</th><th>How to find it</th></tr>'+
+  '<tr><td>Direction</td><td>[a] > 0 opens up. [a] < 0 opens down.</td></tr>'+
+  '<tr><td>y-intercept</td><td>(0, [c])</td></tr>'+
+  '<tr><td>Zeros</td><td>Solve [a]{x}\u00B2 + [b]{x} + [c] = 0. {D} = [b]\u00B2 '+MINUS+' 4[a][c] gives the count.</td></tr>'+
+  '<tr><td>Axis of symmetry</td><td>{x} = '+MINUS+'[b]/(2[a])</td></tr>'+
+  '<tr><td>Vertex</td><td>({h}, {f}({h})) where {h} = '+MINUS+'[b]/(2[a])</td></tr></table>'+
+  '<h2>One idea, three names</h2>'+
+  '<p><b>Zeros</b> and <b>roots</b> are numbers. <b>X-intercepts</b> are points. All three name the same places.</p>'+
+  '<h2>Which tool do I need?</h2>'+
+  '<table class="tbl"><tr><th>If the question asks for</th><th>Use</th></tr>'+
+  '<tr><td>Starting value</td><td>The y-intercept, [c]</td></tr>'+
+  '<tr><td>When or where it lands</td><td>The positive zero</td></tr>'+
+  '<tr><td>Maximum or minimum</td><td>The vertex</td></tr>'+
+  '<tr><td>The best choice</td><td>The vertex, again</td></tr></table>'+
+  '<div class="note"><b>Back to the question.</b> A stream has a highest point because [a] < 0. A cost has a lowest point because [a] > 0. The vertex finds either one.</div>');
+  pages.push(el);
+})();
+
+/* P14 stepper analysis */
+(function(){
+  var el=mk('<h1>Try it: analyze the hose stream</h1>'+
+  '<p>Water leaves the nozzle with height {h}({x}) = '+MINUS+'0.02{x}\u00B2 + 1.2{x} + 3, where {x} is the distance from the nozzle in feet. Step through the analysis.</p>'+
+  '<div id="gwrap"></div>'+
+  '<div class="steps" id="sbar"></div>'+
+  '<div class="stepbox" id="sbox"></div>'+
+  '<div class="row" style="margin-top:8px"><button class="btn ghost" id="sback">Back</button><button class="btn" id="snext">Next step</button><button class="btn ghost" id="srest">Restart</button></div>');
+  var g=makeGraph({w:560,h:300,base:{xMin:-5,xMax:5,yMin:-3,yMax:5},ml:36,mt:10,mb:24});
+  el.querySelector('#gwrap').appendChild(g.svg);
+  var steps=[
+    ['Direction','<div>[a] = '+MINUS+'0.02 is negative, so the parabola opens down.</div><div>The vertex will be the highest point of the stream.</div>'],
+    ['y-intercept','<div>Set {x} = 0. The result is [c] = 3.</div><div>The point (0, 3) is the nozzle, 3 ft above the ground.</div>'],
+    ['Axis of symmetry','<div class="calc">{x} = '+MINUS+'[b]/(2[a]) = '+MINUS+'1.2 / (2 \u00B7 '+MINUS+'0.02) = '+MINUS+'1.2 / '+MINUS+'0.04 = 30</div><div>The axis is the line {x} = 30.</div>'],
+    ['Vertex','<div class="calc">{h}(30) = '+MINUS+'0.02(30)\u00B2 + 1.2(30) + 3 = '+MINUS+'18 + 36 + 3 = 21</div><div>The vertex is (30, 21). The stream peaks at 21 ft, 30 ft from the nozzle.</div>'],
+    ['Zeros','<div class="calc">{D} = 1.2\u00B2 '+MINUS+' 4('+MINUS+'0.02)(3) = 1.68</div><div class="calc">{x} = ('+MINUS+'1.2 \u00B1 \u221A1.68) / (2 \u00B7 '+MINUS+'0.02) gives {x} \u2248 '+MINUS+'2.4 and {x} \u2248 62.4</div>'],
+    ['Check the context','<div>Both zeros are real math, but only one fits the situation. A distance of '+MINUS+'2.4 ft is behind the nozzle. The stream lands <b>62.4 ft</b> from the nozzle.</div><div>Symmetry check: 30 '+MINUS+' ('+MINUS+'2.4) = 32.4 and 62.4 '+MINUS+' 30 = 32.4.</div>']
+  ];
+  var cur=0,bar=el.querySelector('#sbar');
+  steps.forEach(function(){bar.appendChild(document.createElement('span'));});
+  var range={xMin:-8,xMax:70,yMin:-4,yMax:26};
+  function render(){
+    var n=cur+1;
+    g.draw(-0.02,1.2,3,{range:range,yint:n>=2,axis:n>=3,vertex:n>=4,zeros:n>=5,focus:(n===1?'dir':null)});
+    Array.prototype.forEach.call(bar.children,function(s,i){s.className=(i===cur)?'cur':(i<cur?'on':'');});
+    el.querySelector('#sbox').innerHTML=T('<h3>Step '+n+' of '+steps.length+': '+steps[cur][0]+'</h3>'+steps[cur][1]);
+    el.querySelector('#sback').disabled=(cur===0);
+    el.querySelector('#snext').disabled=(cur===steps.length-1);
+    if(cur===steps.length-1)markDone('steps');
+  }
+  el.querySelector('#snext').addEventListener('click',function(){if(cur<steps.length-1){cur++;render();}});
+  el.querySelector('#sback').addEventListener('click',function(){if(cur>0){cur--;render();}});
+  el.querySelector('#srest').addEventListener('click',function(){cur=0;render();});
+  render();
+  pages.push(el);
+})();
+
+/* P15 common mistakes */
+(function(){
+  var el=mk('<h1>Common mistakes and how to avoid them</h1>'+
+  '<p class="lead">Almost every wrong answer in this unit comes from one of these five.</p>'+
+  '<div class="warn"><b>1. Dropping the sign in '+MINUS+'[b]/(2[a]).</b> With [b] = '+MINUS+'4 and [a] = 1, {h} = '+MINUS+'('+MINUS+'4)/(2 \u00B7 1) = 2, not '+MINUS+'2. Write the parentheses.</div>'+
+  '<div class="warn"><b>2. Dividing only part of the formula.</b> In the quadratic formula, the whole numerator is divided by 2[a], both the '+MINUS+'[b] and the square root.</div>'+
+  '<div class="warn"><b>3. Writing the y-intercept as a number.</b> It is a point: (0, [c]). The zeros of the function are numbers. The x-intercepts are points: ({r}, 0).</div>'+
+  '<div class="warn"><b>4. Mixing up zeros and the vertex.</b> Zeros are where {y} = 0. The vertex is the turning point. They match only when the parabola just touches the x-axis.</div>'+
+  '<div class="warn"><b>5. Ignoring the situation.</b> A zero can be correct math and still not fit. A negative distance or a negative time usually means you keep the other zero.</div>'+
+  '<div class="note"><b>Before you submit.</b> Substitute your answer back into the function. If a zero is right, the function gives 0. If a vertex is right, a point on each side at equal distance gives the same height.</div>');
+  pages.push(el);
+})();
+
+/* P16 mission check */
+(function(){
+  var el=mk('<h1>Mission check</h1>'+
+  '<p>Analyze this parabola. Fill in every field, then check.</p>'+
+  '<div class="eq big" id="meq"></div>'+
+  '<div class="mgrid">'+
+    '<div class="ml">Opens</div><div class="mi"><select id="mo"><option value="">Choose</option><option value="up">Up</option><option value="down">Down</option></select></div>'+
+    '<div class="ml">y-intercept</div><div class="mi">(0, <input id="my" type="text" inputmode="decimal" autocomplete="off">)</div>'+
+    '<div class="ml">Axis of symmetry</div><div class="mi"><i>x</i> = <input id="ma" type="text" inputmode="decimal" autocomplete="off"></div>'+
+    '<div class="ml">Vertex</div><div class="mi">(<input id="mh" type="text" inputmode="decimal" autocomplete="off">, <input id="mk" type="text" inputmode="decimal" autocomplete="off">)</div>'+
+    '<div class="ml">Number of zeros</div><div class="mi"><select id="mz"><option value="">Choose</option><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></div>'+
+  '</div>'+
+  '<div class="row"><button class="btn" id="mchk">Check</button><button class="btn ghost" id="mnew">New equation</button><span class="tiny" id="msc"></span></div>'+
+  '<div class="fb" id="mfb"></div>'+
+  '<div class="work hide" id="mwk"></div><div id="mg" class="hide"></div>');
+  var mgr=makeGraph({w:560,h:160,ml:36,mt:6,mb:20});el.querySelector('#mg').appendChild(mgr.svg);
+  var A,B,C,H,K,solved=0,checked=false,perfect=0;
+  function newM(){
+    A=pick([-2,-1,1,2]);H=ri(-4,4);
+    var r=Math.random(),sg=A>0?1:-1;
+    if(r<0.5)K=-sg*ri(1,6);else if(r<0.85)K=sg*ri(1,6);else K=0;
+    B=-2*A*H;C=A*H*H+K;checked=false;
+    el.querySelector('#meq').innerHTML=T('{y} = '+eqHTML(A,B,C,{color:false}));
+    ['my','ma','mh','mk'].forEach(function(id){var i=el.querySelector('#'+id);i.value='';i.className='';});
+    ['mo','mz'].forEach(function(id){var s=el.querySelector('#'+id);s.value='';s.className='';});
+    el.querySelector('#mfb').textContent='';el.querySelector('#mfb').className='fb';
+    el.querySelector('#mwk').classList.add('hide');el.querySelector('#mg').classList.add('hide');
+  }
+  function zeroCount(){var D=disc(A,B,C);return D>0?2:(D===0?1:0);}
+  el.querySelector('#mnew').addEventListener('click',newM);
+  el.querySelector('#mchk').addEventListener('click',function(){
+    var checks=[['mo',(A>0?'up':'down')],['my',C],['ma',H],['mh',H],['mk',K],['mz',String(zeroCount())]];
+    var all=true,count=0;
+    checks.forEach(function(c){
+      var e=el.querySelector('#'+c[0]);var ok=(typeof c[1]==='number')?(num(e.value)===c[1]):(e.value===c[1]);
+      e.className=ok?'ok':'bad';if(ok)count++;else all=false;
+    });
+    var fb=el.querySelector('#mfb');
+    if(all){fb.className='fb good';fb.textContent='Mission complete. All 6 answers are correct.';if(!checked){perfect++;markDone('mission');}checked=true;}
+    else{fb.className='fb nope';fb.textContent=count+' of 6 correct. Fix the red fields, or open the worked solution below.';}
+    var D=disc(A,B,C);
+    var wk=el.querySelector('#mwk');wk.classList.remove('hide');
+    wk.innerHTML=T('<div><b>Opens:</b> [a] = '+fmt(A)+', so '+(A>0?'up':'down')+'.</div>'+
+      '<div><b>y-intercept:</b> [c] = '+fmt(C)+', so (0, '+fmt(C)+').</div>'+
+      '<div><b>Axis:</b> {x} = '+MINUS+'('+fmt(B)+')/(2('+fmt(A)+')) = '+fmt(H)+'.</div>'+
+      '<div><b>Vertex:</b> {k} = {f}('+fmt(H)+') = '+fmt(K)+', so ('+fmt(H)+', '+fmt(K)+').</div>'+
+      '<div><b>Zeros:</b> {D} = ('+fmt(B)+')\u00B2 '+MINUS+' 4('+fmt(A)+')('+fmt(C)+') = '+fmt(D)+', so '+zeroCount()+'.</div>');
+    el.querySelector('#mg').classList.remove('hide');mgr.draw(A,B,C,{});
+    el.querySelector('#msc').textContent='Perfect rounds: '+perfect;
+  });
+  newM();
+  pages.push(el);
+})();
+
+/* P17 back cover */
+(function(){
+  var li=PROG.map(function(p){return '<li data-k="'+p[0]+'">'+p[1]+'</li>';}).join('');
+  var el=mk('<h1>Your progress</h1>'+
+    '<p class="sub" style="font-size:19px;color:#cfe3f4"><b id="pcount">0</b> of '+PROG.length+' activities complete.</p>'+
+    '<ul class="plist">'+li+'</ul>'+
+    '<p style="color:#cfe3f4;font-size:17px">You now have the full toolkit for any quadratic: the y-intercept, the zeros, the axis, and the vertex. Next, use them on problems where the situation decides which feature matters.</p>'+
+    '<div class="row" style="margin-top:14px"><button class="btn amber" id="toStart">Back to the cover</button></div>','back');
+  backEl=el;
+  Object.keys(doneFlags).forEach(function(k){markDone2(k);});
+  function markDone2(k){var li=el.querySelector('.plist li[data-k="'+k+'"]');if(li)li.classList.add('on');}
+  pages.push(el);
+})();
+
+/* finish pages: classes and footers */
+var SEC=['','Basics','Basics','Real world','Real world','Parabola','Parabola','y-intercept','y-intercept','Zeros','Zeros','Symmetry and vertex','Symmetry and vertex','Review','Review','Review','Review',''];
+pages.forEach(function(p,i){
+  p.classList.add(i%2===0?'rp':'lp');
+  if(i!==0&&i!==pages.length-1){
+    var f=document.createElement('div');f.className='foot';
+    f.innerHTML='<span>'+i+'</span><span>'+SEC[i]+'</span>';p.appendChild(f);
+  }
+});
+
+/* ===================== ENGINE ===================== */
+var NP=pages.length,MAXS=Math.ceil((NP-1)/2);
+var leftHalf=$('#leftHalf'),rightHalf=$('#rightHalf'),flipper=$('#flipper');
+var front=flipper.querySelector('.front'),back=flipper.querySelector('.back');
+var slider=$('#slider'),book=$('#book'),fit=$('#fit'),stage=$('#stage'),single=$('#single');
+var mode='spread',spread=0,pageNo=0,busy=false;
+
+var TOC=[['Cover',0],['What is a quadratic equation?',1],['Where quadratics show up',3],['Meet the parabola',5],['The y-intercept',7],['X-intercepts and zeros',9],['Symmetry and the vertex',11],['The full picture',13],['Common mistakes and practice',15],['Your progress',17]];
+function spreadOf(p){return Math.ceil(p/2);}
+
+function setHalf(half,page){half.replaceChildren();if(page)half.appendChild(page);half.classList.toggle('empty',!page);}
+function sp(s){return {L:(s>=1?pages[2*s-1]:null),R:(2*s<NP?pages[2*s]:null)};}
+function shiftFor(s){return s===0?-320:(s===MAXS?320:0);}
+function setShift(s,dur){
+  slider.style.transition=dur===0?'none':'transform '+dur+'ms cubic-bezier(.45,.05,.25,1)';
+  slider.style.transform='translateX('+shiftFor(s)+'px)';
+  if(dur===0){void slider.offsetWidth;}
+}
+function show(s){
+  var q=sp(s);setHalf(leftHalf,q.L);setHalf(rightHalf,q.R);setShift(s,0);
+  front.replaceChildren();back.replaceChildren();flipper.style.display='none';
+}
+function flip(dir,dur){
+  return new Promise(function(res){
+    var s=spread,t=s+dir,cur=sp(s),nxt=sp(t);
+    flipper.style.transition='none';flipper.style.setProperty('--fd',dur+'ms');
+    front.style.animation='none';back.style.animation='none';void front.offsetWidth;front.style.animation='';back.style.animation='';
+    front.style.setProperty('--fd',dur+'ms');back.style.setProperty('--fd',dur+'ms');
+    if(dir===1){
+      front.replaceChildren();back.replaceChildren();
+      if(cur.R)front.appendChild(cur.R);if(nxt.L)back.appendChild(nxt.L);
+      setHalf(rightHalf,nxt.R);
+      flipper.style.transform='rotateY(0deg)';
+    }else{
+      front.replaceChildren();back.replaceChildren();
+      if(cur.L)back.appendChild(cur.L);if(nxt.R)front.appendChild(nxt.R);
+      setHalf(leftHalf,nxt.L);
+      flipper.style.transform='rotateY(-180deg)';
+    }
+    flipper.style.display='block';void flipper.offsetWidth;
+    flipper.style.transition='transform '+dur+'ms cubic-bezier(.45,.05,.25,1)';
+    flipper.style.transform=(dir===1)?'rotateY(-180deg)':'rotateY(0deg)';
+    setShift(t,dur);
+    setTimeout(function(){
+      if(dir===1){setHalf(leftHalf,nxt.L);}else{setHalf(rightHalf,nxt.R);}
+      front.replaceChildren();back.replaceChildren();flipper.style.display='none';flipper.style.transform='none';
+      spread=t;updateNav();res();
+    },dur+40);
+  });
+}
+async function go(to){
+  if(mode!=='spread'||busy||to<0||to>MAXS||to===spread)return;
+  busy=true;
+  var n=Math.abs(to-spread),dir=to>spread?1:-1;
+  if(RM){spread=to;show(to);updateNav();}
+  else if(n===1){await flip(dir,820);}
+  else if(n<=4){for(var i=0;i<n;i++){await flip(dir,280);}}
+  else{book.classList.add('fade');await sleep(190);spread=to;show(to);updateNav();book.classList.remove('fade');}
+  busy=false;
+}
+function showSingle(p,dir){
+  p=Math.max(0,Math.min(NP-1,p));
+  single.replaceChildren();
+  var pg=pages[p];pg.classList.remove('anL','anR');single.appendChild(pg);
+  if(dir&&!RM){void pg.offsetWidth;pg.classList.add(dir>0?'anR':'anL');}
+  single.scrollTop=0;pageNo=p;updateNav();
+}
+function goPage(p){if(mode==='spread')go(spreadOf(p));else showSingle(p,p>pageNo?1:-1);}
+function next(){if(mode==='spread')go(spread+1);else showSingle(pageNo+1,1);}
+function prev(){if(mode==='spread')go(spread-1);else showSingle(pageNo-1,-1);}
+
+/* nav */
+var dotsEl=$('#dots'),prevBtn=$('#prevBtn'),nextBtn=$('#nextBtn'),edgePrev=$('#edgePrev'),edgeNext=$('#edgeNext');
+TOC.forEach(function(t,i){
+  var b=document.createElement('button');b.title=t[0];b.setAttribute('aria-label',t[0]);
+  b.addEventListener('click',function(){goPage(t[1]);});dotsEl.appendChild(b);
+});
+function updateNav(){
+  var atStart=(mode==='spread')?spread===0:pageNo===0;
+  var atEnd=(mode==='spread')?spread===MAXS:pageNo===NP-1;
+  prevBtn.disabled=atStart;nextBtn.disabled=atEnd;edgePrev.disabled=atStart;edgeNext.disabled=atEnd;
+  var cp=(mode==='spread')?(spread===0?0:2*spread-1):pageNo;
+  var idx=0;TOC.forEach(function(t,i){if(cp>=t[1]-((mode==='spread'&&t[1]>0)?0:0)&&((mode==='spread')?spreadOf(t[1])<=spread:t[1]<=pageNo))idx=i;});
+  Array.prototype.forEach.call(dotsEl.children,function(b,i){b.classList.toggle('on',i===idx);});
+  $('#pg').textContent='Page '+(pageNo+1)+' of '+NP;
+}
+prevBtn.addEventListener('click',prev);nextBtn.addEventListener('click',next);
+edgePrev.addEventListener('click',prev);edgeNext.addEventListener('click',next);
+var tocEl=$('#toc');
+TOC.forEach(function(t){var b=document.createElement('button');b.textContent=t[0];b.setAttribute('role','menuitem');
+  b.addEventListener('click',function(){tocEl.classList.add('hide');goPage(t[1]);});tocEl.appendChild(b);});
+$('#tocBtn').addEventListener('click',function(e){e.stopPropagation();tocEl.classList.toggle('hide');});
+document.addEventListener('click',function(e){if(!tocEl.contains(e.target))tocEl.classList.add('hide');});
+document.addEventListener('keydown',function(e){
+  var tg=e.target&&e.target.tagName;
+  if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA')return;
+  if(e.key==='ArrowRight'||e.key==='PageDown'){next();e.preventDefault();}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){prev();e.preventDefault();}
+  else if(e.key==='Escape'){tocEl.classList.add('hide');}
+});
+/* swipe in single mode */
+var sx0=null,sy0=null;
+single.addEventListener('pointerdown',function(e){if(e.target.closest('input,select,button,svg,.noswipe'))return;sx0=e.clientX;sy0=e.clientY;});
+single.addEventListener('pointerup',function(e){
+  if(sx0===null)return;var dx=e.clientX-sx0,dy=e.clientY-sy0;sx0=null;
+  if(Math.abs(dx)>80&&Math.abs(dy)<50){if(dx<0)next();else prev();}
+});
+
+/* layout and mode */
+function layout(){
+  var W=stage.clientWidth,H=stage.clientHeight;
+  var s=Math.min(W/1340,H/850);
+  fit.style.setProperty('--s',Math.min(s,1.9));
+  var want=(s<0.6)?'single':'spread';
+  if(want!==mode)setMode(want);
+}
+function setMode(m){
+  if(m===mode)return;
+  if(m==='single'){
+    pageNo=(spread===0)?0:2*spread-1;
+    setHalf(leftHalf,null);setHalf(rightHalf,null);front.replaceChildren();back.replaceChildren();flipper.style.display='none';
+    mode='single';document.body.classList.add('single');
+    pages.forEach(function(p){p.classList.add('single');});
+    showSingle(pageNo,0);
+  }else{
+    spread=spreadOf(pageNo);single.replaceChildren();
+    mode='spread';document.body.classList.remove('single');
+    pages.forEach(function(p){p.classList.remove('single','anL','anR');});
+    show(spread);updateNav();
+  }
+}
+window.addEventListener('resize',layout);
+
+/* cover and back buttons */
+pages[0].querySelector('#openBook').addEventListener('click',next);
+pages[NP-1].querySelector('#toStart').addEventListener('click',function(){goPage(0);});
+
+/* init */
+show(0);layout();updateNav();
+window.flipbook={go:go,goPage:goPage,pages:pages,next:next,prev:prev,mode:function(){return mode;},spread:function(){return spread;}};
+})();
+</script>
+</body>
+</html>

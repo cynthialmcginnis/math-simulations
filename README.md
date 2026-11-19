@@ -6,6 +6,7 @@ College algebra simulations built for adult, military-affiliated learners. Each 
 
 | Page | Topic |
 |---|---|
+| [Quadratic Equations: An Interactive Field Guide](quadratic-equations-flipbook.html) | Quadratic functions, interactive textbook |
 | [Bravo Two-Seven: Where Does the Center Go?](search-and-rescue-circle.html) | Circles, Distance & midpoint |
 | [Ladder Rescue Simulator](ladder-rescue-simulator.html) | Pythagorean theorem, Right triangles |
 | [Water Balloon Launch](water-balloon-launch.html) | Quadratic functions |
